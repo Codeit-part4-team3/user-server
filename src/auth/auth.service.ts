@@ -21,7 +21,7 @@ export class AuthService {
       Username: email,
       Password: password,
     };
-    return this.cognitoClient.signUp(params).promise();
+    return await this.cognitoClient.signUp(params).promise();
   }
 
   async confirmSignUp(email: string, code: string) {
@@ -30,7 +30,7 @@ export class AuthService {
       Username: email,
       ConfirmationCode: code,
     };
-    return this.cognitoClient.confirmSignUp(params).promise();
+    return await this.cognitoClient.confirmSignUp(params).promise();
   }
 
   async Login(email: string, password: string) {
@@ -42,11 +42,13 @@ export class AuthService {
         PASSWORD: password,
       },
     };
-    return this.cognitoClient.initiateAuth(params).promise();
+    return await this.cognitoClient.initiateAuth(params).promise();
   }
 
   async getUserInfo(accessToken: string) {
-    return this.cognitoClient.getUser({ AccessToken: accessToken }).promise();
+    return await this.cognitoClient
+      .getUser({ AccessToken: accessToken })
+      .promise();
   }
 
   async changePassword(
@@ -59,7 +61,7 @@ export class AuthService {
       PreviousPassword: currentPassword, // 현재 비밀번호 입력
       ProposedPassword: newPassword, // 새로운 비밀번호 입력
     };
-    return this.cognitoClient.changePassword(params).promise();
+    return await this.cognitoClient.changePassword(params).promise();
   }
   async getToken(refreshToken: string) {
     const params = {
@@ -76,7 +78,7 @@ export class AuthService {
       ClientId: this.clientId,
       Username: email,
     };
-    return this.cognitoClient.forgotPassword(params).promise();
+    return await this.cognitoClient.forgotPassword(params).promise();
   }
   async confirmPasswordReset(email: string, newPassword: string, code: string) {
     const params = {
@@ -85,13 +87,13 @@ export class AuthService {
       Password: newPassword,
       Username: email,
     };
-    return this.cognitoClient.confirmForgotPassword(params).promise();
+    return await this.cognitoClient.confirmForgotPassword(params).promise();
   }
   async resendConfirmationCode(email: string) {
     const params = {
       ClientId: this.clientId,
       Username: email,
     };
-    return this.cognitoClient.resendConfirmationCode(params).promise();
+    return await this.cognitoClient.resendConfirmationCode(params).promise();
   }
 }
