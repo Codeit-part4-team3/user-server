@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { CognitoIdentityServiceProvider } from 'aws-sdk';
+import CognitoIdentityServiceProvider from 'aws-sdk/clients/cognitoidentityserviceprovider';
 
 @Injectable()
 export class AuthService {
@@ -21,6 +21,7 @@ export class AuthService {
       Username: email,
       Password: password,
     };
+
     return await this.cognitoClient.signUp(params).promise();
   }
 
@@ -30,6 +31,7 @@ export class AuthService {
       Username: email,
       ConfirmationCode: code,
     };
+
     return await this.cognitoClient.confirmSignUp(params).promise();
   }
 
@@ -42,6 +44,7 @@ export class AuthService {
         PASSWORD: password,
       },
     };
+
     return await this.cognitoClient.initiateAuth(params).promise();
   }
 
@@ -61,6 +64,7 @@ export class AuthService {
       PreviousPassword: currentPassword, // 현재 비밀번호 입력
       ProposedPassword: newPassword, // 새로운 비밀번호 입력
     };
+
     return await this.cognitoClient.changePassword(params).promise();
   }
   async getToken(refreshToken: string) {
@@ -71,6 +75,7 @@ export class AuthService {
         REFRESH_TOKEN: refreshToken,
       },
     };
+
     return this.cognitoClient.initiateAuth(params).promise();
   }
   async forgotPassword(email: string) {
@@ -78,6 +83,7 @@ export class AuthService {
       ClientId: this.clientId,
       Username: email,
     };
+
     return await this.cognitoClient.forgotPassword(params).promise();
   }
   async confirmPasswordReset(email: string, newPassword: string, code: string) {
@@ -87,6 +93,7 @@ export class AuthService {
       Password: newPassword,
       Username: email,
     };
+
     return await this.cognitoClient.confirmForgotPassword(params).promise();
   }
   async resendConfirmationCode(email: string) {
@@ -94,6 +101,7 @@ export class AuthService {
       ClientId: this.clientId,
       Username: email,
     };
+
     return await this.cognitoClient.resendConfirmationCode(params).promise();
   }
 }
