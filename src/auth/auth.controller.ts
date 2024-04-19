@@ -21,7 +21,7 @@ import {
 } from './api-response/signUpResponse';
 
 @ApiTags('auth')
-@Controller('auth')
+@Controller('api/user/v1/auth')
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
