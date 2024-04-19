@@ -16,7 +16,7 @@ import {
   forgotNotData,
 } from './api-response/passwordResponse';
 
-@Controller('')
+@Controller('api/user/v1/')
 export class PasswordController {
   constructor(private readonly authService: AuthService) {}
 
