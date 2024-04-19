@@ -57,7 +57,6 @@ export class PasswordController {
         data.newPassword,
         data.code,
       );
-      return;
     } catch (e) {
       throw new HttpException('잘못 된 코드입니다.', HttpStatus.BAD_REQUEST);
     }
@@ -82,7 +81,6 @@ export class PasswordController {
         data.currentPassword,
         data.newPassword,
       );
-      return;
     } catch (e) {
       throw new HttpException(
         '토큰 또는 비밀번호가 유효하지 않습니다.',
