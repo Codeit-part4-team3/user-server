@@ -12,7 +12,10 @@ async function bootstrap() {
     .addTag('auth')
     .build();
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api', app, document);
+  SwaggerModule.setup('api/user/v1', app, document);
+  app.enableCors({
+    origin: 'https://api.pqsoft.net/',
+  });
 
   await app.listen(80);
 }

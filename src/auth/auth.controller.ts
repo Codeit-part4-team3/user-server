@@ -84,9 +84,12 @@ export class AuthController {
       return await this.userService.createUser({
         email,
         nickname,
-        state: '오프라인',
       });
-    } catch (_) {
+    } catch (e) {
+      if (e.code === 'P2002') {
+        throw new HttpException('이미 유저가 있습니다.', HttpStatus.CONFLICT);
+      }
+
       throw new HttpException('회원가입에 실패했습니다.', HttpStatus.CONFLICT);
     }
   }
@@ -101,11 +104,6 @@ export class AuthController {
 
     try {
       await this.authService.confirmSignUp(email, code);
-
-      await this.userService.updateUserState({
-        email: email,
-        state: '온라인',
-      });
     } catch (_) {
       throw new HttpException(
         '코드가 만료되었거나 일치하지 않습니다!',
