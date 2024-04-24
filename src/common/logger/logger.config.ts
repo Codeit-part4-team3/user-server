@@ -6,6 +6,9 @@ export const appendTimestamp = winston.format((info, opts) => {
   if (opts.tz) {
     info.timestamp = moment().tz(opts.tz).format();
   }
+  if (info.statusCode) {
+    info.status = info.statusCode;
+  }
   return info;
 });
 

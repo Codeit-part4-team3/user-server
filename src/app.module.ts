@@ -8,6 +8,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { FriendModule } from './friend/friend.module';
 import { LoggerModule } from './common/logger/logger.module';
+import { LoggingInterceptor } from './common/logger/logger.interceptor';
 
 @Module({
   imports: [
@@ -17,6 +18,14 @@ import { LoggerModule } from './common/logger/logger.module';
     FriendModule,
   ],
   controllers: [UserController, AppController],
-  providers: [PrismaService, UserService, AppService],
+  providers: [
+    PrismaService,
+    UserService,
+    AppService,
+    {
+      provide: 'APP_INTERCEPTOR',
+      useClass: LoggingInterceptor,
+    },
+  ],
 })
 export class AppModule {}
