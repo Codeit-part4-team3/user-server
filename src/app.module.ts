@@ -7,9 +7,11 @@ import { AuthModule } from './auth/auth.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { FriendModule } from './friend/friend.module';
+import { LoggerModule } from './common/logger/logger.module';
 
 @Module({
   imports: [
+    LoggerModule,
     AuthModule,
     ConfigModule.forRoot({ isGlobal: true, envFilePath: '.env' }),
     FriendModule,
