@@ -18,8 +18,7 @@ export class AuthService {
   constructor(
     private readonly configService: ConfigService,
     private readonly userService: UserService,
-    @Inject(WINSTON_MODULE_PROVIDER)
-    private readonly logger: Logger,
+    @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
   ) {
     this.cognitoClient = new CognitoIdentityServiceProvider({
       region: 'ap-northeast-2',
