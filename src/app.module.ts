@@ -8,7 +8,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { FriendModule } from './friend/friend.module';
 import { LoggerModule } from './common/logger/logger.module';
-import { LoggerMiddleware } from './common/logger/logger.middleware';
+import { LoggingMiddleware } from './common/logger/logger.middleware';
 
 @Module({
   imports: [
@@ -22,6 +22,6 @@ import { LoggerMiddleware } from './common/logger/logger.middleware';
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(LoggerMiddleware).forRoutes('*');
+    consumer.apply(LoggingMiddleware).forRoutes('*'); // 모든 라우트에 미들웨어를 적용
   }
 }
