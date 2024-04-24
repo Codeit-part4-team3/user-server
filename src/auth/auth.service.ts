@@ -16,15 +16,26 @@ export class AuthService {
   private readonly cognitoClient: CognitoIdentityServiceProvider;
   private readonly clientId: string;
   constructor(
+    @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
     private readonly configService: ConfigService,
     private readonly userService: UserService,
-    @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
   ) {
     this.cognitoClient = new CognitoIdentityServiceProvider({
       region: 'ap-northeast-2',
     });
 
     this.clientId = this.configService.get<string>('CLIENT_ID');
+
+    // 로거가 준비되었는지 확인
+    if (this.logger) {
+      if ('info' in this.logger) {
+        this.logger.info('AuthService initialized');
+      } else {
+        console.error('Logger method info is not available');
+      }
+    } else {
+      console.error('Logger is not defined');
+    }
   }
 
   // 토큰으로 로그인
