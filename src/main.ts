@@ -14,7 +14,7 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api/user/v1', app, document);
   app.enableCors({
-    origin: 'https://api.pqsoft.net/',
+    origin: 'https://pqsoft.net/',
   });
 
   await app.listen(80);
