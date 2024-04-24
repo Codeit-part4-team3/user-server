@@ -27,27 +27,6 @@ export class UserService {
     return this.prismaService.user.create({ data });
   }
 
-  async updateUserState({
-    id,
-    state,
-    email,
-  }: {
-    id?: string;
-    state: string;
-    email?: string;
-  }) {
-    if (id) {
-      return this.prismaService.user.update({
-        where: { id: +id },
-        data: { state },
-      });
-    }
-    return this.prismaService.user.update({
-      where: { email },
-      data: { state },
-    });
-  }
-
   async updateUserNickname({
     id,
     nickname,
