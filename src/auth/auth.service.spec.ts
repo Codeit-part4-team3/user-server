@@ -3,13 +3,14 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { AuthService } from './auth.service';
 import { PrismaService } from '../prisma.service';
 import { UserService } from '../user/user.service';
+import { LoggerModule } from '../common/logger/logger.module';
 
 describe('AuthService', () => {
   let service: AuthService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      imports: [ConfigModule],
+      imports: [ConfigModule, LoggerModule],
       providers: [AuthService, PrismaService, UserService],
     }).compile();
 
