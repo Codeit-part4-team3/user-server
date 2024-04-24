@@ -1,7 +1,8 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Put } from '@nestjs/common';
 import { FriendService } from './friend.service';
 
 import { SendFriendDto } from './../dto/sendFriend.dto';
+import { UpdateFriendRequest } from './../dto/updateFriendRequset.dto';
 
 @Controller('api/user/v1/friend')
 export class FriendController {
@@ -14,5 +15,20 @@ export class FriendController {
   @Post('send')
   async sendFriend(@Body() sendFriendDto: SendFriendDto) {
     return await this.friendService.sendFriend(sendFriendDto);
+  }
+
+  @Get('receive/:id')
+  async getReceiveFriendRequest(@Param('id') id) {
+    return await this.friendService.getReceiveFriendRequest(+id);
+  }
+
+  @Put('accepted')
+  async updateFriendRequest(@Body() updateFriendRequest: UpdateFriendRequest) {
+    await this.friendService.updateFriendRequest(updateFriendRequest);
+  }
+
+  @Get('list/:id')
+  async getFriendList(@Param('id') id) {
+    return await this.friendService.getFriendList(+id);
   }
 }
