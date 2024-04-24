@@ -25,7 +25,6 @@ import { dailyOptions } from './logger.config';
           ),
         }),
 
-        new winstonDaily(dailyOptions('info')),
         new winstonDaily(dailyOptions('warn')),
         new winstonDaily(dailyOptions('error')),
         new winstonDaily(dailyOptions('fatal')),
