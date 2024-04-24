@@ -6,7 +6,7 @@ import {
   Inject,
 } from '@nestjs/common';
 import { Observable } from 'rxjs';
-import { tap } from 'rxjs/operators';
+import { finalize } from 'rxjs/operators';
 import { LoggerService } from '@nestjs/common';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 
@@ -23,7 +23,7 @@ export class LoggingInterceptor implements NestInterceptor {
     const response = httpContext.getResponse();
 
     return next.handle().pipe(
-      tap(() => {
+      finalize(() => {
         const statusCode = response.statusCode;
         const method = request.method;
         const url = request.url;
