@@ -5,8 +5,10 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { UserService } from '../user/user.service';
 import { PrismaService } from '../prisma.service';
+import { LoggerModule } from '../common/logger/logger.module';
 
 @Module({
+  imports: [LoggerModule],
   controllers: [AuthController, PasswordController],
   providers: [AuthService, UserService, PrismaService],
 })
