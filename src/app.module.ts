@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { PrismaService } from './prisma.service';
 import { UserController } from './user/user.controller';
@@ -8,7 +8,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { FriendModule } from './friend/friend.module';
 import { LoggerModule } from './common/logger/logger.module';
-import { LoggingInterceptor } from './common/logger/logger.interceptor';
+import { LoggerMiddleware } from './common/logger/logger.middleware';
 
 @Module({
   imports: [
@@ -18,14 +18,10 @@ import { LoggingInterceptor } from './common/logger/logger.interceptor';
     FriendModule,
   ],
   controllers: [UserController, AppController],
-  providers: [
-    PrismaService,
-    UserService,
-    AppService,
-    {
-      provide: 'APP_INTERCEPTOR',
-      useClass: LoggingInterceptor,
-    },
-  ],
+  providers: [PrismaService, UserService, AppService],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(LoggerMiddleware).forRoutes('*');
+  }
+}

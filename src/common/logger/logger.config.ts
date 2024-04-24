@@ -6,9 +6,6 @@ export const appendTimestamp = winston.format((info, opts) => {
   if (opts.tz) {
     info.timestamp = moment().tz(opts.tz).format();
   }
-  if (info.statusCode) {
-    info.status = info.statusCode;
-  }
   return info;
 });
 
@@ -28,7 +25,7 @@ export const dailyOptions = (level: string) => {
     format: winston.format.combine(
       appendTimestamp({ tz: 'Asia/Seoul' }),
       winston.format.printf((info) => {
-        return `${info.timestamp} - ${info.level} - [Status: ${info.status}] ${info.message}`;
+        return `${info.timestamp} - ${info.level} - ${info.message}`;
       }),
     ),
   };
