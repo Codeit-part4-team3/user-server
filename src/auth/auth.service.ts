@@ -25,6 +25,17 @@ export class AuthService {
     });
 
     this.clientId = this.configService.get<string>('CLIENT_ID');
+
+    // 로거가 준비되었는지 확인
+    if (this.logger) {
+      if ('info' in this.logger) {
+        this.logger.info('AuthService initialized');
+      } else {
+        console.error('Logger method info is not available');
+      }
+    } else {
+      console.error('Logger is not defined');
+    }
   }
 
   // 토큰으로 로그인
@@ -60,10 +71,12 @@ export class AuthService {
     };
 
     try {
+      this.logger.info(`User ${signupDto.email} signed up successfully.`);
       return await this.cognitoClient.signUp(params).promise();
 
       return await this.userService.createUser(signupDto);
     } catch (e) {
+      this.logger.error(`Signup failed for ${signupDto.email}: ${e.message}`);
       throw new HttpException('회원가입에 실패했습니다.', HttpStatus.CONFLICT);
     }
   }
@@ -78,8 +91,12 @@ export class AuthService {
     };
     try {
       const res = await this.cognitoClient.confirmSignUp(params).promise();
+      this.logger.info(`Signup confirmed for user: ${confirmSignupDto.email}`);
       return res;
     } catch (e) {
+      this.logger.error(
+        `Confirmation failed for ${confirmSignupDto.email}: ${e.message}`,
+      );
       throw new HttpException(
         '코드가 만료되었거나 일치하지 않습니다!',
         HttpStatus.BAD_REQUEST,
@@ -104,6 +121,7 @@ export class AuthService {
       const res = await this.cognitoClient.initiateAuth(params).promise();
       const userInfo = await this.userService.getUserByEmail(email);
       const AuthenticationResult = res.AuthenticationResult;
+      this.logger.info(`Login successful for ${loginDto.email}`);
 
       return {
         userInfo,
@@ -113,6 +131,7 @@ export class AuthService {
         },
       };
     } catch (e) {
+      this.logger.error(`Login failed for ${loginDto.email}: ${e.message}`);
       if (e.code === 'UserNotConfirmedException') {
         throw new HttpException('이메일을 인증하세요!', HttpStatus.CONFLICT);
       }
@@ -138,8 +157,10 @@ export class AuthService {
 
     try {
       const res = await this.cognitoClient.changePassword(params).promise();
+      this.logger.info('Password changed successfully.');
       return res;
     } catch (e) {
+      this.logger.error(`Password change failed: ${e.message}`);
       throw new HttpException(
         '토큰 또는 비밀번호가 유효하지 않습니다.',
         HttpStatus.NOT_FOUND,
@@ -158,9 +179,11 @@ export class AuthService {
 
     try {
       const res = await this.cognitoClient.initiateAuth(params).promise();
+      this.logger.info('Token refreshed successfully.');
 
       return { accessToken: res.AuthenticationResult.AccessToken };
     } catch (e) {
+      this.logger.error('Token refresh failed: ' + e.message);
       throw new HttpException(
         '토큰이 유효하지 않습니다.',
         HttpStatus.BAD_REQUEST,
@@ -177,8 +200,10 @@ export class AuthService {
 
     try {
       const res = await this.cognitoClient.forgotPassword(params).promise();
+      this.logger.info('Forgot password initiated successfully.');
       return res;
     } catch (e) {
+      this.logger.error('Failed to initiate forgot password: ' + e.message);
       throw new HttpException(
         'Forgot password initiation failed.',
         HttpStatus.BAD_REQUEST,
@@ -200,8 +225,10 @@ export class AuthService {
       const res = await this.cognitoClient
         .confirmForgotPassword(params)
         .promise();
+      this.logger.info('Password reset confirmed successfully.');
       return res;
     } catch (e) {
+      this.logger.error('Password reset confirmation failed: ' + e.message);
       throw new HttpException(
         'Password reset confirmation failed.',
         HttpStatus.BAD_REQUEST,
@@ -220,8 +247,10 @@ export class AuthService {
       const res = await this.cognitoClient
         .resendConfirmationCode(params)
         .promise();
+      this.logger.info('Confirmation code resent successfully.');
       return res;
     } catch (e) {
+      this.logger.error('Failed to resend confirmation code: ' + e.message);
       throw new HttpException(
         'Failed to resend confirmation code.',
         HttpStatus.BAD_REQUEST,
