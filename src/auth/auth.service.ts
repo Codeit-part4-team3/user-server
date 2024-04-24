@@ -1,13 +1,22 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import CognitoIdentityServiceProvider from 'aws-sdk/clients/cognitoidentityserviceprovider';
+import { UserService } from '../user/user.service';
+import { SignupDto } from './../dto/signup.dto';
+import { ConfirmSignupDto } from './../dto/confirmSignup.dto';
+import { LoginDto } from './../dto/login.dto';
+import { EmailDto } from './../dto/email.dto';
+import { ForgotPasswordDto } from './../dto/forgotPassword.dto';
+import { ChangePasswordDto } from './../dto/changePassword.dto';
 
 @Injectable()
 export class AuthService {
   private readonly cognitoClient: CognitoIdentityServiceProvider;
   private readonly clientId: string;
-
-  constructor(private readonly configService: ConfigService) {
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly userService: UserService,
+  ) {
     this.cognitoClient = new CognitoIdentityServiceProvider({
       region: 'ap-northeast-2',
     });
@@ -15,27 +24,72 @@ export class AuthService {
     this.clientId = this.configService.get<string>('CLIENT_ID');
   }
 
-  async signUp(email: string, password: string) {
+  // 토큰으로 로그인
+  async tokenLogin(accessToken: string) {
+    return await this.cognitoClient
+      .getUser({ AccessToken: accessToken })
+      .promise();
+  }
+
+  // 토큰으로 유저 정보 불러오기
+  async tokenGetUser(token: string) {
+    try {
+      const email = (await this.tokenLogin(token)).UserAttributes.find(
+        (it) => it.Name === 'email',
+      ).Value;
+
+      return this.userService.getUserByEmail(email);
+    } catch (_) {
+      throw new HttpException(
+        '만료된 토큰이거나 잘못된 토큰입니다.',
+        HttpStatus.NOT_FOUND,
+      );
+    }
+  }
+
+  // 회원가입
+  async signUp(signupDto: SignupDto) {
+    const { email, password, nickname } = signupDto;
     const params = {
       ClientId: this.clientId,
       Username: email,
       Password: password,
     };
 
-    return await this.cognitoClient.signUp(params).promise();
+    try {
+      await this.cognitoClient.signUp(params).promise();
+
+      return await this.userService.createUser({
+        email,
+        nickname,
+      });
+    } catch (e) {
+      throw new HttpException('회원가입에 실패했습니다.', HttpStatus.CONFLICT);
+    }
   }
 
-  async confirmSignUp(email: string, code: string) {
+  // 이메일 인증
+  async confirmSignUp(confirmSignupDto: ConfirmSignupDto) {
+    const { email, code } = confirmSignupDto;
     const params = {
       ClientId: this.clientId,
       Username: email,
       ConfirmationCode: code,
     };
-
-    return await this.cognitoClient.confirmSignUp(params).promise();
+    try {
+      return await this.cognitoClient.confirmSignUp(params).promise();
+    } catch (_) {
+      throw new HttpException(
+        '코드가 만료되었거나 일치하지 않습니다!',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
   }
 
-  async Login(email: string, password: string) {
+  // 로그인
+  async Login(loginDto: LoginDto) {
+    const { email, password } = loginDto;
+
     const params = {
       AuthFlow: 'USER_PASSWORD_AUTH',
       ClientId: this.clientId,
@@ -45,28 +99,52 @@ export class AuthService {
       },
     };
 
-    return await this.cognitoClient.initiateAuth(params).promise();
+    try {
+      const res = await this.cognitoClient.initiateAuth(params).promise();
+      const userInfo = await this.userService.getUserByEmail(email);
+      const AuthenticationResult = res.AuthenticationResult;
+
+      return {
+        userInfo,
+        token: {
+          accessToken: AuthenticationResult.AccessToken,
+          refreshToken: AuthenticationResult.RefreshToken,
+        },
+      };
+    } catch (e) {
+      if (e.code === 'UserNotConfirmedException') {
+        throw new HttpException('이메일을 인증하세요!', HttpStatus.CONFLICT);
+      }
+
+      throw new HttpException(
+        '아이디 혹은 비밀번호가 틀렸습니다.',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
   }
 
-  async getUserInfo(accessToken: string) {
-    return await this.cognitoClient
-      .getUser({ AccessToken: accessToken })
-      .promise();
-  }
-
+  // 비밀번호 변경
   async changePassword(
     accessToken: string,
-    currentPassword: string,
-    newPassword: string,
+    changePasswordDto: ChangePasswordDto,
   ) {
+    const { currentPassword, newPassword } = changePasswordDto;
     const params = {
       AccessToken: accessToken, // 현재 사용자의 액세스 토큰을 입력하세요
       PreviousPassword: currentPassword, // 현재 비밀번호 입력
       ProposedPassword: newPassword, // 새로운 비밀번호 입력
     };
 
-    return await this.cognitoClient.changePassword(params).promise();
+    try {
+      return await this.cognitoClient.changePassword(params).promise();
+    } catch (e) {
+      throw new HttpException(
+        '토큰 또는 비밀번호가 유효하지 않습니다.',
+        HttpStatus.NOT_FOUND,
+      );
+    }
   }
+
   async getToken(refreshToken: string) {
     const params = {
       AuthFlow: 'REFRESH_TOKEN_AUTH',
@@ -76,9 +154,20 @@ export class AuthService {
       },
     };
 
-    return this.cognitoClient.initiateAuth(params).promise();
+    try {
+      const res = await this.cognitoClient.initiateAuth(params).promise();
+
+      return { accessToken: res.AuthenticationResult.AccessToken };
+    } catch (_) {
+      throw new HttpException(
+        '토큰이 유효하지 않습니다.',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
   }
-  async forgotPassword(email: string) {
+
+  async forgotPassword(emailDto: EmailDto) {
+    const { email } = emailDto;
     const params = {
       ClientId: this.clientId,
       Username: email,
@@ -86,7 +175,10 @@ export class AuthService {
 
     return await this.cognitoClient.forgotPassword(params).promise();
   }
-  async confirmPasswordReset(email: string, newPassword: string, code: string) {
+
+  async confirmPasswordReset(forgotPasswordDto: ForgotPasswordDto) {
+    const { email, code, newPassword } = forgotPasswordDto;
+
     const params = {
       ClientId: this.clientId,
       ConfirmationCode: code,
@@ -96,7 +188,9 @@ export class AuthService {
 
     return await this.cognitoClient.confirmForgotPassword(params).promise();
   }
-  async resendConfirmationCode(email: string) {
+
+  async resendConfirmationCode(emailDto: EmailDto) {
+    const { email } = emailDto;
     const params = {
       ClientId: this.clientId,
       Username: email,

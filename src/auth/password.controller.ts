@@ -15,6 +15,9 @@ import {
   forgotConfirmNotData,
   forgotNotData,
 } from './api-response/passwordResponse';
+import { EmailDto } from './../dto/email.dto';
+import { ForgotPasswordDto } from './../dto/forgotPassword.dto';
+import { ChangePasswordDto } from './../dto/changePassword.dto';
 
 @Controller('api/user/v1/')
 export class PasswordController {
@@ -29,14 +32,10 @@ export class PasswordController {
   @ApiBody({
     type: ForgotSchema,
   })
-  @ApiResponse({ status: 201 })
+  @ApiResponse({ status: 204 })
   @forgotNotData
-  async forgotPassword(@Body() data) {
-    try {
-      return this.authService.forgotPassword(data.email);
-    } catch (e) {
-      return e;
-    }
+  async forgotPassword(@Body() emailDto: EmailDto) {
+    return this.authService.forgotPassword(emailDto);
   }
 
   // 비밀번호 리셋 및 새로운 비밀번호 생성
@@ -48,18 +47,10 @@ export class PasswordController {
   @ApiBody({
     type: ForgotConfirmSchema,
   })
-  @ApiResponse({ status: 201 })
+  @ApiResponse({ status: 204 })
   @forgotConfirmNotData
-  async confirmPasswordReset(@Body() data) {
-    try {
-      await this.authService.confirmPasswordReset(
-        data.email,
-        data.newPassword,
-        data.code,
-      );
-    } catch (e) {
-      throw new HttpException('잘못 된 코드입니다.', HttpStatus.BAD_REQUEST);
-    }
+  async confirmPasswordReset(@Body() forgotPasswordDto: ForgotPasswordDto) {
+    return await this.authService.confirmPasswordReset(forgotPasswordDto);
   }
 
   // 비밀번호 변경
@@ -68,24 +59,17 @@ export class PasswordController {
   @ApiOperation({
     summary: '비밀번호 변경',
   })
-  @ApiResponse({ status: 201 })
+  @ApiResponse({ status: 204 })
   @changePasswordNotData
-  async changePassword(@Request() request, @Body() data) {
+  async changePassword(
+    @Request() request,
+    @Body() changePasswordDto: ChangePasswordDto,
+  ) {
     const [type, token] = request.headers.authorization?.split(' ') ?? [];
     if (type !== 'Bearer' || !token) {
       throw new HttpException('토큰이 없습니다.', HttpStatus.BAD_REQUEST);
     }
-    try {
-      await this.authService.changePassword(
-        token,
-        data.currentPassword,
-        data.newPassword,
-      );
-    } catch (e) {
-      throw new HttpException(
-        '토큰 또는 비밀번호가 유효하지 않습니다.',
-        HttpStatus.NOT_FOUND,
-      );
-    }
+
+    return await this.authService.changePassword(token, changePasswordDto);
   }
 }
