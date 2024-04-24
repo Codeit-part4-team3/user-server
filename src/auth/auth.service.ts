@@ -52,8 +52,8 @@ export class AuthService {
 
   // 회원가입
   async signUp(signupDto: SignupDto) {
+    const { email, password } = signupDto;
     this.logger.info(`Attempting to sign up user: ${signupDto.email}`);
-    const { email, password, nickname } = signupDto;
     const params = {
       ClientId: this.clientId,
       Username: email,
@@ -64,10 +64,7 @@ export class AuthService {
       this.logger.info(`User ${signupDto.email} signed up successfully.`);
       return await this.cognitoClient.signUp(params).promise();
 
-      return await this.userService.createUser({
-        email,
-        nickname,
-      });
+      return await this.userService.createUser(signupDto);
     } catch (e) {
       this.logger.error(`Signup failed for ${signupDto.email}: ${e.message}`);
       throw new HttpException('회원가입에 실패했습니다.', HttpStatus.CONFLICT);

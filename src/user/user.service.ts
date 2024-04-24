@@ -1,6 +1,8 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { User } from '@prisma/client';
+import { SignupDto } from 'src/dto/signup.dto';
+import { StateDto } from './../dto/state.dto';
 
 @Injectable()
 export class UserService {
@@ -13,13 +15,18 @@ export class UserService {
 
     const user = await this.prismaService.user.findUnique({
       where: { id },
+      include: {
+        state: true, // State 정보 포함
+      },
     });
+
     if (!user) {
       throw new HttpException(
         '존재하지 않는 유저입니다.',
         HttpStatus.NOT_FOUND,
       );
     }
+
     return user;
   }
 
@@ -27,24 +34,45 @@ export class UserService {
     if (!email) {
       throw new HttpException('email은 필수 입니다.', HttpStatus.NOT_FOUND);
     }
+
     const user = await this.prismaService.user.findUnique({
       where: { email },
+      include: {
+        state: true, // State 정보 포함
+      },
     });
+
     if (!user) {
       throw new HttpException(
         '존재하지 않는 유저입니다.',
         HttpStatus.NOT_FOUND,
       );
     }
+
     return user;
   }
 
-  async deleteUser(id: string) {
-    return this.prismaService.user.delete({ where: { id: +id } });
+  async deleteUser(id: number) {
+    return this.prismaService.user.delete({ where: { id } });
   }
 
-  async createUser(data) {
-    return this.prismaService.user.create({ data });
+  async createUser(signupDto: SignupDto) {
+    const { email, nickname } = signupDto;
+
+    return this.prismaService.user.create({
+      data: {
+        email: email,
+        nickname: nickname,
+        state: {
+          create: {
+            name: '오프라인',
+          },
+        },
+      },
+      include: {
+        state: true,
+      },
+    });
   }
 
   async updateUserNickname({
@@ -62,9 +90,30 @@ export class UserService {
         data: { nickname },
       });
     }
+
     return this.prismaService.user.update({
       where: { email },
       data: { nickname },
+    });
+  }
+
+  async getState(id: number) {
+    await this.getUserById(id);
+
+    return this.prismaService.state.findUnique({ where: { userId: id } });
+  }
+
+  async changeState(id: number, stateDto: StateDto) {
+    const { state } = stateDto;
+
+    await this.getUserById(id);
+    if (!['온라인', '오프라인', '자리비움'].includes(state)) {
+      throw new HttpException('state가 틀렸습니다.', HttpStatus.NOT_FOUND);
+    }
+
+    return this.prismaService.state.update({
+      where: { userId: id },
+      data: { name: state },
     });
   }
 }
