@@ -7,10 +7,6 @@ import { UpdateFriendRequest } from './../dto/updateFriendRequset.dto';
 @Controller('api/user/v1/friend')
 export class FriendController {
   constructor(private readonly friendService: FriendService) {}
-  @Get()
-  test() {
-    return 'hello';
-  }
 
   @Post('send')
   async sendFriend(@Body() sendFriendDto: SendFriendDto) {

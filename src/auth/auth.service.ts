@@ -49,7 +49,7 @@ export class AuthService {
 
   // 회원가입
   async signUp(signupDto: SignupDto) {
-    const { email, password, nickname } = signupDto;
+    const { email, password } = signupDto;
     const params = {
       ClientId: this.clientId,
       Username: email,
@@ -59,10 +59,7 @@ export class AuthService {
     try {
       await this.cognitoClient.signUp(params).promise();
 
-      return await this.userService.createUser({
-        email,
-        nickname,
-      });
+      return await this.userService.createUser(signupDto);
     } catch (e) {
       throw new HttpException('회원가입에 실패했습니다.', HttpStatus.CONFLICT);
     }
