@@ -9,7 +9,7 @@ import { EmailDto } from './../dto/email.dto';
 import { ForgotPasswordDto } from './../dto/forgotPassword.dto';
 import { ChangePasswordDto } from './../dto/changePassword.dto';
 import { Logger } from 'winston';
-import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
+import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 
 @Injectable()
 export class AuthService {
@@ -18,7 +18,7 @@ export class AuthService {
   constructor(
     private readonly configService: ConfigService,
     private readonly userService: UserService,
-    @Inject(WINSTON_MODULE_NEST_PROVIDER)
+    @Inject(WINSTON_MODULE_PROVIDER)
     private readonly logger: Logger,
   ) {
     this.cognitoClient = new CognitoIdentityServiceProvider({
