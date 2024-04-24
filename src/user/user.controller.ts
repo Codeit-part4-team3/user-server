@@ -12,6 +12,6 @@ export class UserController {
     summary: '유저 정보',
   })
   async getUser(@Param('id') id: string) {
-    return await this.userService.getUser({ id });
+    return await this.userService.getUserById(+id);
   }
 }

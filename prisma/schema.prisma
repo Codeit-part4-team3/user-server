@@ -14,8 +14,29 @@ datasource db {
 }
 
 model User {
+  id        Int         @default(autoincrement()) @id 
+  email     String      @unique
+  nickname  String
+  state    State?
+}
+
+model FriendList {
+  userId Int 
+  friendId Int
+  @@unique([userId, friendId])
+  @@id([userId, friendId])
+}
+
+model State {
   id  Int @default(autoincrement()) @id
-  email String @unique
-  nickname String
-  state String
+  name String
+  user    User  @relation(fields: [userId], references: [id])
+  userId  Int   @unique
+}
+
+model SendFriend {
+  sendUserId Int 
+  receiveUserId Int
+  @@unique([sendUserId, receiveUserId]) 
+  @@id([sendUserId, receiveUserId])
 }

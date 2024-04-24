@@ -8,7 +8,6 @@ import {
   Request,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { UserService } from 'src/user/user.service';
 import { ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
 import {
   getUserTokenData,
@@ -19,14 +18,15 @@ import {
   signupNotData,
   signupSuccessData,
 } from './api-response/signUpResponse';
+import { SignupDto } from '../dto/signup.dto';
+import { ConfirmSignupDto } from './../dto/confirmSignup.dto';
+import { LoginDto } from './../dto/login.dto';
+import { EmailDto } from './../dto/email.dto';
 
 @ApiTags('auth')
 @Controller('api/user/v1/auth')
 export class AuthController {
-  constructor(
-    private readonly authService: AuthService,
-    private readonly userService: UserService,
-  ) {}
+  constructor(private readonly authService: AuthService) {}
 
   // 토큰으로 유저 확인
   @Get('user')
@@ -40,19 +40,7 @@ export class AuthController {
     if (type !== 'Bearer' || !token) {
       throw new HttpException('토큰이 없습니다.', HttpStatus.BAD_REQUEST);
     }
-
-    try {
-      const email = (
-        await this.authService.getUserInfo(token)
-      ).UserAttributes.find((it) => it.Name === 'email').Value;
-
-      return this.userService.getUser({ email });
-    } catch (_) {
-      throw new HttpException(
-        '만료된 토큰이거나 잘못된 토큰입니다.',
-        HttpStatus.NOT_FOUND,
-      );
-    }
+    return await this.authService.tokenGetUser(token);
   }
 
   //회원가입
@@ -63,32 +51,8 @@ export class AuthController {
   @ApiBody({ type: SignUpSchema })
   @signupSuccessData
   @signupNotData
-  async signUp(@Body() data) {
-    const { email, password, nickname } = data;
-
-    if (!email) {
-      throw new HttpException('이메일은 필수입니다.', HttpStatus.NOT_FOUND);
-    }
-
-    if (!password) {
-      throw new HttpException('비밀번호는 필수입니다.', HttpStatus.NOT_FOUND);
-    }
-
-    if (!nickname) {
-      throw new HttpException('닉네임은 필수입니다.', HttpStatus.NOT_FOUND);
-    }
-
-    try {
-      await this.authService.signUp(email, password);
-
-      return await this.userService.createUser({
-        email,
-        nickname,
-        state: '오프라인',
-      });
-    } catch (_) {
-      throw new HttpException('회원가입에 실패했습니다.', HttpStatus.CONFLICT);
-    }
+  async signUp(@Body() signupDto: SignupDto) {
+    return this.authService.signUp(signupDto);
   }
 
   // 이메일 인증
@@ -96,22 +60,8 @@ export class AuthController {
   @ApiOperation({
     summary: '회원가입 이메일 인증',
   })
-  async confirmSignUp(@Body() data) {
-    const { email, code } = data;
-
-    try {
-      await this.authService.confirmSignUp(email, code);
-
-      await this.userService.updateUserState({
-        email: email,
-        state: '온라인',
-      });
-    } catch (_) {
-      throw new HttpException(
-        '코드가 만료되었거나 일치하지 않습니다!',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
+  async confirmSignup(@Body() confirmSignupDto: ConfirmSignupDto) {
+    return await this.authService.confirmSignUp(confirmSignupDto);
   }
 
   // 인증번호 다시보내기
@@ -119,18 +69,8 @@ export class AuthController {
   @ApiOperation({
     summary: '이메일 인증 다시 보내기',
   })
-  async resendConfirmationCode(@Body() data) {
-    const { email } = data;
-
-    if (!email) {
-      throw new HttpException('이메일은 필수입니다.', HttpStatus.NOT_FOUND);
-    }
-
-    try {
-      return this.authService.resendConfirmationCode(email);
-    } catch (e) {
-      return e;
-    }
+  async resendConfirmationCode(@Body() emailDto: EmailDto) {
+    return this.authService.resendConfirmationCode(emailDto);
   }
 
   //로그인
@@ -138,39 +78,8 @@ export class AuthController {
   @ApiOperation({
     summary: '로그인',
   })
-  async Login(@Body() data) {
-    const { email, password } = data;
-
-    if (!email) {
-      throw new HttpException('이메일은 필수입니다.', HttpStatus.NOT_FOUND);
-    }
-
-    if (!password) {
-      throw new HttpException('비밀번호는 필수입니다.', HttpStatus.NOT_FOUND);
-    }
-
-    try {
-      const res = await this.authService.Login(email, password);
-      const userInfo = await this.userService.getUser({ email });
-      const AuthenticationResult = res.AuthenticationResult;
-
-      return {
-        userInfo,
-        token: {
-          accessToken: AuthenticationResult.AccessToken,
-          refreshToken: AuthenticationResult.RefreshToken,
-        },
-      };
-    } catch (e) {
-      if (e.code === 'UserNotConfirmedException') {
-        throw new HttpException('이메일을 인증하세요!', HttpStatus.CONFLICT);
-      }
-
-      throw new HttpException(
-        '아이디 혹은 비밀번호가 틀렸습니다.',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
+  async Login(@Body() loginDto: LoginDto) {
+    return await this.authService.Login(loginDto);
   }
 
   //토큰 갱신
@@ -185,15 +94,6 @@ export class AuthController {
       throw new HttpException('토큰이 없습니다.', HttpStatus.NOT_FOUND);
     }
 
-    try {
-      const res = (await this.authService.getToken(token)).AuthenticationResult
-        .AccessToken;
-      return { accessToken: res };
-    } catch (_) {
-      throw new HttpException(
-        '토큰이 유효하지 않습니다.',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
+    return await this.authService.getToken(token);
   }
 }
