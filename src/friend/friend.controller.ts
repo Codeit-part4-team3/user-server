@@ -7,7 +7,7 @@ import {
   Post,
 } from '@nestjs/common';
 import { FriendService } from './friend.service';
-import { UserService } from 'src/user/user.service';
+import { UserService } from '../user/user.service';
 
 @Controller('api/user/v1/friend')
 export class FriendController {
