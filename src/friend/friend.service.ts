@@ -4,7 +4,7 @@ import { PrismaService } from '../prisma.service';
 import { SendFriendDto } from './../dto/sendFriend.dto';
 import { UserService } from '../user/user.service';
 import { FriendOneDto } from './../dto/friendOne.dto';
-import { UpdateFriendRequest } from './../dto/updateFriendRequset.dto';
+import { UpdateFriendRequest } from '../dto/updateFriendRequest.dto';
 
 @Injectable()
 export class FriendService {
@@ -76,8 +76,8 @@ export class FriendService {
   }
 
   // 요청 목록에서 일치하는 값 삭제
-  async deleteFriendRequest(friendOneDto: FriendOneDto) {
-    const { friendId, userId } = friendOneDto;
+  async deleteFriendRequest(userId: number, friendOneDto: FriendOneDto) {
+    const { friendId } = friendOneDto;
 
     try {
       await this.prismaService.sendFriend.delete({
@@ -94,8 +94,8 @@ export class FriendService {
   }
 
   // 친구 추가
-  async addFriend(friendOneDto: FriendOneDto) {
-    const { userId, friendId } = friendOneDto;
+  async addFriend(userId: number, friendOneDto: FriendOneDto) {
+    const { friendId } = friendOneDto;
 
     // 존재하는지 체크
     await this.userService.getUserById(userId);
@@ -115,14 +115,17 @@ export class FriendService {
   }
 
   // 친구 요청 응답
-  async updateFriendRequest(updateFriendRequest: UpdateFriendRequest) {
-    const { userId, friendId, isAccepted } = updateFriendRequest;
+  async updateFriendRequest(
+    userId: number,
+    updateFriendRequest: UpdateFriendRequest,
+  ) {
+    const { friendId, isAccepted } = updateFriendRequest;
 
     if (isAccepted) {
-      await this.addFriend({ userId, friendId });
+      await this.addFriend(userId, { friendId });
     }
 
-    await this.deleteFriendRequest({ userId, friendId });
+    await this.deleteFriendRequest(userId, { friendId });
   }
 
   // 친구목록 모두 불러오기
