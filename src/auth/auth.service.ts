@@ -71,7 +71,8 @@ export class AuthService {
     };
 
     try {
-      return await this.cognitoClient.signUp(params).promise();
+      this.logger.info(`User ${signupDto.email} signed up successfully.`);
+      await this.cognitoClient.signUp(params).promise();
 
       return await this.userService.createUser(signupDto);
     } catch (e) {
@@ -167,6 +168,7 @@ export class AuthService {
     }
   }
 
+  // 토큰 얻기
   async getToken(refreshToken: string) {
     const params = {
       AuthFlow: 'REFRESH_TOKEN_AUTH',
@@ -190,6 +192,7 @@ export class AuthService {
     }
   }
 
+  // 비밀번호 잊었을 때 이메일로 코드요청
   async forgotPassword(emailDto: EmailDto) {
     const { email } = emailDto;
     const params = {
@@ -210,6 +213,7 @@ export class AuthService {
     }
   }
 
+  // 새 비밀번호로 변경
   async confirmPasswordReset(forgotPasswordDto: ForgotPasswordDto) {
     const { email, code, newPassword } = forgotPasswordDto;
 
