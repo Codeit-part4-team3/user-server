@@ -10,7 +10,6 @@ export const signupNotData = ApiResponse({
         example2: {
           value: { message: '비밀번호는 8자 이상 20자 이하이어야 합니다.' },
         },
-        example3: { value: { message: '비밀번호를 입력해주세요.' } },
       },
     },
   },

@@ -5,6 +5,7 @@ import { PrismaService } from '../prisma.service';
 import { UserService } from '../user/user.service';
 import { ConfigModule } from '@nestjs/config';
 import { LoggerModule } from '../common/logger/logger.module';
+import { generateUniqueEmail } from './../util/generateUniqueEmail';
 
 describe('AuthController', () => {
   let controller: AuthController;
@@ -19,7 +20,12 @@ describe('AuthController', () => {
     controller = module.get<AuthController>(AuthController);
   });
 
-  it('should be defined', () => {
-    expect(controller).toBeDefined();
+  it('회원가입 테스트', async () => {
+    const res = await controller.signUp({
+      email: generateUniqueEmail(),
+      nickname: 'test',
+      password: 'sprint101',
+    });
+    expect(res).toBeUndefined();
   });
 });

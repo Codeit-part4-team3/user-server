@@ -10,10 +10,6 @@ import {
 import { AuthService } from './auth.service';
 import { ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
 import {
-  getUserTokenData,
-  getUserTokenNotData,
-} from './api-response/getUserTokenResponse';
-import {
   signupNotData,
   signupSuccessData,
 } from './api-response/signUpResponse';
@@ -27,21 +23,6 @@ import { EmailDto } from './../dto/email.dto';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  // 토큰으로 유저 확인
-  @Get('user')
-  @ApiOperation({
-    summary: '토큰으로 로그인',
-  })
-  @getUserTokenNotData
-  @getUserTokenData
-  async getUser(@Request() request) {
-    const [type, token] = request.headers.authorization?.split(' ') ?? [];
-    if (type !== 'Bearer' || !token) {
-      throw new HttpException('토큰이 없습니다.', HttpStatus.BAD_REQUEST);
-    }
-    return await this.authService.tokenGetUser(token);
-  }
-
   //회원가입
   @Post('signup')
   @ApiOperation({
@@ -51,7 +32,7 @@ export class AuthController {
   @signupSuccessData
   @signupNotData
   async signUp(@Body() signupDto: SignupDto) {
-    return this.authService.signUp(signupDto);
+    await this.authService.signUp(signupDto);
   }
 
   // 이메일 인증
