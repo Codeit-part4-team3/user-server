@@ -14,7 +14,7 @@ import { LoggingMiddleware } from './common/logger/logger.middleware';
   imports: [
     LoggerModule,
     AuthModule,
-    ConfigModule.forRoot({ isGlobal: true, envFilePath: '.env' }),
+    ConfigModule.forRoot({ isGlobal: true }),
     FriendModule,
   ],
   controllers: [UserController, AppController],
