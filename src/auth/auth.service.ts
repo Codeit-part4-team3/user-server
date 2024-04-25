@@ -72,7 +72,7 @@ export class AuthService {
 
     try {
       this.logger.info(`User ${signupDto.email} signed up successfully.`);
-      return await this.cognitoClient.signUp(params).promise();
+      await this.cognitoClient.signUp(params).promise();
 
       return await this.userService.createUser(signupDto);
     } catch (e) {
