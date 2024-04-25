@@ -1,15 +1,35 @@
 import { Module, Global } from '@nestjs/common';
-import { winstonLogger } from './winston.util';
-import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
+import * as winston from 'winston';
+import {
+  utilities as nestWinstonModuleUtilities,
+  WinstonModule,
+} from 'nest-winston';
+import { ConfigModule } from '@nestjs/config';
+import winstonDaily from 'winston-daily-rotate-file';
+import { dailyOptions } from './logger.config';
 
 @Global()
 @Module({
-  providers: [
-    {
-      provide: WINSTON_MODULE_PROVIDER,
-      useValue: winstonLogger,
-    },
+  imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
+    WinstonModule.forRoot({
+      transports: [
+        new winston.transports.Console({
+          level: 'info',
+          format: winston.format.combine(
+            winston.format.timestamp(),
+            winston.format.colorize(),
+            nestWinstonModuleUtilities.format.nestLike('user-server', {
+              prettyPrint: true,
+            }),
+          ),
+        }),
+
+        new winstonDaily(dailyOptions('warn')),
+        new winstonDaily(dailyOptions('error')),
+        new winstonDaily(dailyOptions('fatal')),
+      ],
+    }),
   ],
-  exports: [WINSTON_MODULE_PROVIDER],
 })
 export class LoggerModule {}

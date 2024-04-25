@@ -16,15 +16,26 @@ export class AuthService {
   private readonly cognitoClient: CognitoIdentityServiceProvider;
   private readonly clientId: string;
   constructor(
+    @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
     private readonly configService: ConfigService,
     private readonly userService: UserService,
-    @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
   ) {
     this.cognitoClient = new CognitoIdentityServiceProvider({
       region: 'ap-northeast-2',
     });
 
     this.clientId = this.configService.get<string>('CLIENT_ID');
+
+    // 로거가 준비되었는지 확인
+    if (this.logger) {
+      if ('info' in this.logger) {
+        this.logger.info('AuthService initialized');
+      } else {
+        console.error('Logger method info is not available');
+      }
+    } else {
+      console.error('Logger is not defined');
+    }
   }
 
   // 토큰으로 로그인
@@ -53,7 +64,6 @@ export class AuthService {
   // 회원가입
   async signUp(signupDto: SignupDto) {
     const { email, password } = signupDto;
-    this.logger.info(`Attempting to sign up user: ${signupDto.email}`);
     const params = {
       ClientId: this.clientId,
       Username: email,
@@ -73,7 +83,6 @@ export class AuthService {
 
   // 이메일 인증
   async confirmSignUp(confirmSignupDto: ConfirmSignupDto) {
-    this.logger.info(`Confirming signup for user: ${confirmSignupDto.email}`);
     const { email, code } = confirmSignupDto;
     const params = {
       ClientId: this.clientId,
@@ -97,7 +106,6 @@ export class AuthService {
 
   // 로그인
   async Login(loginDto: LoginDto) {
-    this.logger.info(`User login attempt for ${loginDto.email}`);
     const { email, password } = loginDto;
 
     const params = {
@@ -140,9 +148,6 @@ export class AuthService {
     accessToken: string,
     changePasswordDto: ChangePasswordDto,
   ) {
-    this.logger.info(
-      `Attempting to change password for user with token: ${accessToken}`,
-    );
     const { currentPassword, newPassword } = changePasswordDto;
     const params = {
       AccessToken: accessToken, // 현재 사용자의 액세스 토큰을 입력하세요
@@ -165,9 +170,6 @@ export class AuthService {
 
   // 토큰 얻기
   async getToken(refreshToken: string) {
-    this.logger.info(
-      `Attempting to refresh token with refresh token: ${refreshToken}`,
-    );
     const params = {
       AuthFlow: 'REFRESH_TOKEN_AUTH',
       ClientId: this.clientId,
@@ -192,9 +194,6 @@ export class AuthService {
 
   // 비밀번호 잊었을 때 이메일로 코드요청
   async forgotPassword(emailDto: EmailDto) {
-    this.logger.info(
-      `Attempting to initiate forgot password for email: ${emailDto.email}`,
-    );
     const { email } = emailDto;
     const params = {
       ClientId: this.clientId,
@@ -216,9 +215,6 @@ export class AuthService {
 
   // 새 비밀번호로 변경
   async confirmPasswordReset(forgotPasswordDto: ForgotPasswordDto) {
-    this.logger.info(
-      `Attempting to confirm password reset for user: ${forgotPasswordDto.email}`,
-    );
     const { email, code, newPassword } = forgotPasswordDto;
 
     const params = {
@@ -244,7 +240,6 @@ export class AuthService {
   }
 
   async resendConfirmationCode(emailDto: EmailDto) {
-    this.logger.info(`Resending confirmation code to email: ${emailDto.email}`);
     const { email } = emailDto;
     const params = {
       ClientId: this.clientId,

@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { PrismaService } from './prisma.service';
 import { UserController } from './user/user.controller';
@@ -8,6 +8,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { FriendModule } from './friend/friend.module';
 import { LoggerModule } from './common/logger/logger.module';
+import { LoggingMiddleware } from './common/logger/logger.middleware';
 
 @Module({
   imports: [
@@ -19,4 +20,8 @@ import { LoggerModule } from './common/logger/logger.module';
   controllers: [UserController, AppController],
   providers: [PrismaService, UserService, AppService],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(LoggingMiddleware).forRoutes('*'); // 모든 라우트에 미들웨어를 적용
+  }
+}
