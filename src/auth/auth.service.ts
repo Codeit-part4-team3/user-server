@@ -64,6 +64,7 @@ export class AuthService {
   // 회원가입
   async signUp(signupDto: SignupDto) {
     const { email, password } = signupDto;
+
     const params = {
       ClientId: this.clientId,
       Username: email,
@@ -76,26 +77,38 @@ export class AuthService {
       return await this.userService.createUser(signupDto);
     } catch (e) {
       this.logger.error(`Signup failed for ${signupDto.email}: ${e.message}`);
-      throw new HttpException('회원가입에 실패했습니다.', HttpStatus.CONFLICT);
+
+      if (e.code === 'UsernameExistsException') {
+        throw new HttpException('이미 있는 유저입니다.', HttpStatus.CONFLICT);
+      }
+
+      throw new HttpException(
+        `회원가입에 실패했습니다. : ${e.message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 
   // 이메일 인증
   async confirmSignUp(confirmSignupDto: ConfirmSignupDto) {
     const { email, code } = confirmSignupDto;
+
     const params = {
       ClientId: this.clientId,
       Username: email,
       ConfirmationCode: code,
     };
+
     try {
       const res = await this.cognitoClient.confirmSignUp(params).promise();
       this.logger.info(`Signup confirmed for user: ${confirmSignupDto.email}`);
+
       return res;
     } catch (e) {
       this.logger.error(
         `Confirmation failed for ${confirmSignupDto.email}: ${e.message}`,
       );
+
       throw new HttpException(
         '코드가 만료되었거나 일치하지 않습니다!',
         HttpStatus.BAD_REQUEST,

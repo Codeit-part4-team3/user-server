@@ -13,7 +13,6 @@ import {
   getUserTokenData,
   getUserTokenNotData,
 } from './api-response/getUserTokenResponse';
-import { SignUpSchema } from './schema/signup.schema';
 import {
   signupNotData,
   signupSuccessData,
@@ -48,7 +47,7 @@ export class AuthController {
   @ApiOperation({
     summary: '회원가입',
   })
-  @ApiBody({ type: SignUpSchema })
+  @ApiBody({ type: SignupDto })
   @signupSuccessData
   @signupNotData
   async signUp(@Body() signupDto: SignupDto) {

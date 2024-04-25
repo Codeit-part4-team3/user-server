@@ -6,8 +6,10 @@ export const signupNotData = ApiResponse({
   content: {
     'application/json': {
       examples: {
-        example1: { value: { message: '이메일을 입력해주세요.' } },
-        example2: { value: { message: '닉네임을 입력해주세요.' } },
+        example1: { value: { message: '유효하지 않은 이메일 주소입니다.' } },
+        example2: {
+          value: { message: '비밀번호는 8자 이상 20자 이하이어야 합니다.' },
+        },
         example3: { value: { message: '비밀번호를 입력해주세요.' } },
       },
     },
@@ -17,13 +19,4 @@ export const signupNotData = ApiResponse({
 export const signupSuccessData = ApiResponse({
   status: 201,
   description: 'success',
-  schema: {
-    type: 'object',
-    properties: {
-      id: { type: 'number' },
-      email: { type: 'string' },
-      nickname: { type: 'string' },
-      state: { type: 'string' },
-    },
-  },
 });

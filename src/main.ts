@@ -28,7 +28,9 @@ async function bootstrap() {
     )
     .build();
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api/user/v1', app, document);
+  SwaggerModule.setup('api/user/v1', app, document, {
+    swaggerOptions: { defaultModelsExpandDepth: -1 },
+  });
   app.enableCors({
     origin: 'https://pqsoft.net/',
   });

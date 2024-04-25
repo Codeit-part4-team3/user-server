@@ -7,8 +7,6 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
-import { ForgotSchema } from './schema/forgot.schema';
-import { ForgotConfirmSchema } from './schema/forgotConfirm.schema';
 import {
   changePasswordNotData,
   forgotConfirmNotData,
@@ -30,7 +28,7 @@ export class PasswordController {
     summary: '비밀번호 찾기',
   })
   @ApiBody({
-    type: ForgotSchema,
+    type: EmailDto,
   })
   @ApiResponse({ status: 204 })
   @forgotNotData
@@ -45,7 +43,7 @@ export class PasswordController {
     summary: '비밀번호 재설정',
   })
   @ApiBody({
-    type: ForgotConfirmSchema,
+    type: ForgotPasswordDto,
   })
   @ApiResponse({ status: 204 })
   @forgotConfirmNotData
