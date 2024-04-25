@@ -61,7 +61,7 @@ export class AuthController {
     summary: '회원가입 이메일 인증',
   })
   async confirmSignup(@Body() confirmSignupDto: ConfirmSignupDto) {
-    return await this.authService.confirmSignUp(confirmSignupDto);
+    await this.authService.confirmSignUp(confirmSignupDto);
   }
 
   // 인증번호 다시보내기

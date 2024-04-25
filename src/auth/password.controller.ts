@@ -1,12 +1,4 @@
-import {
-  Body,
-  Controller,
-  HttpException,
-  HttpStatus,
-  Post,
-  Request,
-  UseGuards,
-} from '@nestjs/common';
+import { Body, Controller, Post, Request, UseGuards } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiBody,
@@ -75,12 +67,10 @@ export class PasswordController {
     @Request() request,
     @Body() changePasswordDto: ChangePasswordDto,
   ) {
-    const [type, token] = request.headers.authorization?.split(' ') ?? [];
-    if (type !== 'Bearer' || !token) {
-      throw new HttpException('토큰이 없습니다.', HttpStatus.BAD_REQUEST);
-    }
-
-    return request.userId;
-    // return await this.authService.changePassword(token, changePasswordDto);
+    const accessToken = request.headers['authorization']?.split(' ')[1];
+    return await this.authService.changePassword(
+      accessToken,
+      changePasswordDto,
+    );
   }
 }
