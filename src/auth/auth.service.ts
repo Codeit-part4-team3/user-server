@@ -9,14 +9,14 @@ import { EmailDto } from './../dto/email.dto';
 import { ForgotPasswordDto } from './../dto/forgotPassword.dto';
 import { ChangePasswordDto } from './../dto/changePassword.dto';
 import { Logger } from 'winston';
-import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
+import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 
 @Injectable()
 export class AuthService {
   private readonly cognitoClient: CognitoIdentityServiceProvider;
   private readonly clientId: string;
   constructor(
-    @Inject(WINSTON_MODULE_NEST_PROVIDER) private readonly logger: Logger,
+    @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
     private readonly configService: ConfigService,
     private readonly userService: UserService,
   ) {
@@ -71,9 +71,8 @@ export class AuthService {
     };
 
     try {
-      this.logger.info(`User ${signupDto.email} signed up successfully.`);
       await this.cognitoClient.signUp(params).promise();
-
+      this.logger.info(`User ${signupDto.email} signed up successfully.`);
       return await this.userService.createUser(signupDto);
     } catch (e) {
       this.logger.error(`Signup failed for ${signupDto.email}: ${e.message}`);
