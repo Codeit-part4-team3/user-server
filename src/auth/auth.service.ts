@@ -163,6 +163,7 @@ export class AuthService {
     }
   }
 
+  // 토큰 얻기
   async getToken(refreshToken: string) {
     this.logger.info(
       `Attempting to refresh token with refresh token: ${refreshToken}`,
@@ -189,6 +190,7 @@ export class AuthService {
     }
   }
 
+  // 비밀번호 잊었을 때 이메일로 코드요청
   async forgotPassword(emailDto: EmailDto) {
     this.logger.info(
       `Attempting to initiate forgot password for email: ${emailDto.email}`,
@@ -212,6 +214,7 @@ export class AuthService {
     }
   }
 
+  // 새 비밀번호로 변경
   async confirmPasswordReset(forgotPasswordDto: ForgotPasswordDto) {
     this.logger.info(
       `Attempting to confirm password reset for user: ${forgotPasswordDto.email}`,

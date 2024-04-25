@@ -5,8 +5,15 @@ import {
   HttpStatus,
   Post,
   Request,
+  UseGuards,
 } from '@nestjs/common';
-import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { ForgotSchema } from './schema/forgot.schema';
 import { ForgotConfirmSchema } from './schema/forgotConfirm.schema';
@@ -18,6 +25,7 @@ import {
 import { EmailDto } from './../dto/email.dto';
 import { ForgotPasswordDto } from './../dto/forgotPassword.dto';
 import { ChangePasswordDto } from './../dto/changePassword.dto';
+import { JwtAuthGuard } from './jwt-auth-guard';
 
 @Controller('api/user/v1/')
 export class PasswordController {
@@ -56,6 +64,8 @@ export class PasswordController {
   // 비밀번호 변경
   @ApiTags('auth')
   @Post('user/password')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('accessToken')
   @ApiOperation({
     summary: '비밀번호 변경',
   })
@@ -70,6 +80,7 @@ export class PasswordController {
       throw new HttpException('토큰이 없습니다.', HttpStatus.BAD_REQUEST);
     }
 
-    return await this.authService.changePassword(token, changePasswordDto);
+    return request.userId;
+    // return await this.authService.changePassword(token, changePasswordDto);
   }
 }
