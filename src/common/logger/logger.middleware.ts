@@ -8,8 +8,8 @@ export class LoggingMiddleware implements NestMiddleware {
   use(req: Request, res: Response, next: NextFunction) {
     const { ip, method, originalUrl } = req;
     const userAgent = req.get('user-agent') || '';
-    const reqHeaders = JSON.stringify(req.headers);
-    const reqBody = JSON.stringify(req.body);
+    const reqHeaders = JSON.stringify(req.headers, null, 2);
+    const reqBody = JSON.stringify(req.body, null, 2);
 
     const chunks: Buffer[] = [];
 
@@ -25,13 +25,24 @@ export class LoggingMiddleware implements NestMiddleware {
         chunks.push(Buffer.from(args[0]));
       }
       const responseBody = Buffer.concat(chunks).toString('utf-8');
-      const resHeaders = JSON.stringify(res.getHeaders());
+      const resHeaders = JSON.stringify(res.getHeaders(), null, 2);
 
       const { statusCode, statusMessage } = res;
       const logLevel = statusCode >= 400 ? 'error' : 'log';
+      const levelColor =
+        statusCode >= 400
+          ? '🟥🟥🟥🟥🟥🟥🟥🟥🟥🟥'
+          : statusCode >= 300
+            ? '🟧🟧🟧🟧🟧🟧🟧🟧🟧🟧'
+            : '🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩';
 
       this.logger[logLevel](
-        `Request from ${ip} to ${method} ${originalUrl} - ${statusCode} ${statusMessage} - ${userAgent} \nReq Headers: ${reqHeaders} \nReq Body: ${reqBody} \nRes Headers: ${resHeaders} \nRes Body: ${responseBody}`,
+        `Request from ${ip} to ${method} ${originalUrl} - ${statusCode} ${statusMessage} - ${userAgent}\n\n` +
+          `${levelColor}\n` +
+          `👩 Req Headers:\n${reqHeaders}\n\n` +
+          `👚 Req Body:\n${reqBody}\n\n` +
+          `👨 Res Headers:\n${resHeaders}\n\n` +
+          `👕 Res Body:\n${responseBody}\n`,
       );
 
       return originalEnd(...args);

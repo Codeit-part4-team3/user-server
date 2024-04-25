@@ -2,9 +2,12 @@ import { NestFactory } from '@nestjs/core';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
+import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, { bufferLogs: true });
+  const logger = app.get(WINSTON_MODULE_NEST_PROVIDER);
+  app.useLogger(logger);
 
   app.useGlobalPipes(
     new ValidationPipe({
@@ -31,5 +34,6 @@ async function bootstrap() {
   });
 
   await app.listen(80);
+  logger.log('Application is listening on port 80');
 }
 bootstrap();

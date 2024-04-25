@@ -12,7 +12,7 @@ export const appendTimestamp = winston.format((info, opts) => {
 // 로그 저장 파일 옵션
 export const dailyOptions = (level: string) => {
   return {
-    level: 'info',
+    level: level,
     datePattern: 'YYYY-MM-DD', // 날짜 포맷
     dirname: `${appRootPath.path}/logs` + `/${level}`, // 저장할 URL: 여기서는  루트에 logs라는 폴더가 생기고 그 아래에 level 폴더
     filename: `%DATE%.${level}.log`,
