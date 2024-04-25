@@ -1,6 +1,6 @@
 import * as winston from 'winston';
 import moment from 'moment-timezone';
-import appRoot from 'app-root-path';
+import appRootPath from 'app-root-path';
 
 export const appendTimestamp = winston.format((info, opts) => {
   if (opts.tz) {
@@ -14,7 +14,7 @@ export const dailyOptions = (level: string) => {
   return {
     level: 'info',
     datePattern: 'YYYY-MM-DD', // 날짜 포맷
-    dirname: `${appRoot.path}/logs` + `/${level}`, // 저장할 URL: 여기서는  루트에 logs라는 폴더가 생기고 그 아래에 level 폴더
+    dirname: `${appRootPath.path}/logs` + `/${level}`, // 저장할 URL: 여기서는  루트에 logs라는 폴더가 생기고 그 아래에 level 폴더
     filename: `%DATE%.${level}.log`,
     maxFiles: 20, // 보관할 최대 로그 수
     zippedArchive: true, // 로그가 쌓였을 때 압축
