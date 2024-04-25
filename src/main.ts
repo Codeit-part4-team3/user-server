@@ -21,7 +21,7 @@ async function bootstrap() {
     .setTitle('pq Server')
     .setDescription('pqsoft')
     .setVersion('1.0')
-    .addTag('auth')
+    .addTag('user')
     .addBearerAuth(
       { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },
       'accessToken', // 이 이름이 스웨거 UI에서 보안 스키마를 참조하는 데 사용됩니다.

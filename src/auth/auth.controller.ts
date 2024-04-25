@@ -1,22 +1,23 @@
 import {
   Body,
   Controller,
-  Get,
   HttpException,
   HttpStatus,
-  Post,
   Request,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
-import {
-  signupNotData,
-  signupSuccessData,
-} from './api-response/signUpResponse';
+import { ApiBody, ApiTags } from '@nestjs/swagger';
 import { SignupDto } from '../dto/signup.dto';
 import { ConfirmSignupDto } from './../dto/confirmSignup.dto';
 import { LoginDto } from './../dto/login.dto';
 import { EmailDto } from './../dto/email.dto';
+import {
+  AccessTokenGet,
+  LoginPost,
+  SignUpConfirmPost,
+  SignUpPost,
+  SignUpResentCodePost,
+} from '../decorators/authDecorators';
 
 @ApiTags('auth')
 @Controller('api/user/v1/auth')
@@ -24,49 +25,35 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   //회원가입
-  @Post('signup')
-  @ApiOperation({
-    summary: '회원가입',
-  })
+  @SignUpPost('signup')
   @ApiBody({ type: SignupDto })
-  @signupSuccessData
-  @signupNotData
   async signUp(@Body() signupDto: SignupDto) {
     await this.authService.signUp(signupDto);
   }
 
   // 이메일 인증
-  @Post('signup/confirm')
-  @ApiOperation({
-    summary: '회원가입 이메일 인증',
-  })
+  @SignUpConfirmPost('signup/confirm')
+  @ApiBody({ type: ConfirmSignupDto })
   async confirmSignup(@Body() confirmSignupDto: ConfirmSignupDto) {
     await this.authService.confirmSignUp(confirmSignupDto);
   }
 
   // 인증번호 다시보내기
-  @Post('signup/resend')
-  @ApiOperation({
-    summary: '이메일 인증 다시 보내기',
-  })
+  @SignUpResentCodePost('signup/resend')
+  @ApiBody({ type: EmailDto })
   async resendConfirmationCode(@Body() emailDto: EmailDto) {
-    return this.authService.resendConfirmationCode(emailDto);
+    await this.authService.resendConfirmationCode(emailDto);
   }
 
   //로그인
-  @Post('login')
-  @ApiOperation({
-    summary: '로그인',
-  })
+  @LoginPost('login')
+  @ApiBody({ type: LoginDto })
   async Login(@Body() loginDto: LoginDto) {
     return await this.authService.Login(loginDto);
   }
 
   //토큰 갱신
-  @Get('token')
-  @ApiOperation({
-    summary: '리프레쉬 토큰으로 토큰 갱신',
-  })
+  @AccessTokenGet('token')
   async getToken(@Request() request) {
     const [type, token] = request.headers.authorization?.split(' ') ?? [];
 

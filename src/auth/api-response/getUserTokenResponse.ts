@@ -2,7 +2,7 @@ import { ApiResponse } from '@nestjs/swagger';
 
 export const getUserTokenNotData = ApiResponse({
   status: 400,
-  description: 'badRequest',
+  description: 'BadRequest',
   content: {
     'application/json': {
       examples: {
@@ -14,7 +14,7 @@ export const getUserTokenNotData = ApiResponse({
 
 export const getUserTokenData = ApiResponse({
   status: 201,
-  description: 'success',
+  description: 'Created',
   schema: {
     type: 'object',
     properties: {

@@ -10,6 +10,13 @@ import { ForgotPasswordDto } from './../dto/forgotPassword.dto';
 import { ChangePasswordDto } from './../dto/changePassword.dto';
 import { Logger } from 'winston';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
+import {
+  EMAIL_FORBIDDEN,
+  FAIL_CODE,
+  FAIL_TOKEN,
+  LOGIN_BAD_REQUEST,
+  USER_CONFLICT,
+} from './../constants/message';
 
 @Injectable()
 export class AuthService {
@@ -54,10 +61,7 @@ export class AuthService {
 
       return this.userService.getUserByEmail(email);
     } catch (_) {
-      throw new HttpException(
-        '만료된 토큰이거나 잘못된 토큰입니다.',
-        HttpStatus.NOT_FOUND,
-      );
+      throw new HttpException(FAIL_TOKEN, HttpStatus.NOT_FOUND);
     }
   }
 
@@ -79,7 +83,7 @@ export class AuthService {
       this.logger.error(`Signup failed for ${signupDto.email}: ${e.message}`);
 
       if (e.code === 'UsernameExistsException') {
-        throw new HttpException('이미 있는 유저입니다.', HttpStatus.CONFLICT);
+        throw new HttpException(USER_CONFLICT, HttpStatus.CONFLICT);
       }
 
       throw new HttpException(
@@ -109,10 +113,7 @@ export class AuthService {
         `Confirmation failed for ${confirmSignupDto.email}: ${e.message}`,
       );
 
-      throw new HttpException(
-        '코드가 만료되었거나 일치하지 않습니다!',
-        HttpStatus.BAD_REQUEST,
-      );
+      throw new HttpException(FAIL_CODE, HttpStatus.BAD_REQUEST);
     }
   }
 
@@ -145,13 +146,10 @@ export class AuthService {
     } catch (e) {
       this.logger.error(`Login failed for ${loginDto.email}: ${e.message}`);
       if (e.code === 'UserNotConfirmedException') {
-        throw new HttpException('이메일을 인증하세요!', HttpStatus.CONFLICT);
+        throw new HttpException(EMAIL_FORBIDDEN, HttpStatus.FORBIDDEN);
       }
 
-      throw new HttpException(
-        '아이디 혹은 비밀번호가 틀렸습니다.',
-        HttpStatus.BAD_REQUEST,
-      );
+      throw new HttpException(LOGIN_BAD_REQUEST, HttpStatus.BAD_REQUEST);
     }
   }
 
@@ -173,10 +171,7 @@ export class AuthService {
       return res;
     } catch (e) {
       this.logger.error(`Password change failed: ${e.message}`);
-      throw new HttpException(
-        '토큰 또는 비밀번호가 유효하지 않습니다.',
-        HttpStatus.NOT_FOUND,
-      );
+      throw new HttpException(FAIL_TOKEN, HttpStatus.BAD_REQUEST);
     }
   }
 
@@ -197,10 +192,7 @@ export class AuthService {
       return { accessToken: res.AuthenticationResult.AccessToken };
     } catch (e) {
       this.logger.error('Token refresh failed: ' + e.message);
-      throw new HttpException(
-        '토큰이 유효하지 않습니다.',
-        HttpStatus.BAD_REQUEST,
-      );
+      throw new HttpException(FAIL_TOKEN, HttpStatus.BAD_REQUEST);
     }
   }
 
@@ -240,10 +232,13 @@ export class AuthService {
       const res = await this.cognitoClient
         .confirmForgotPassword(params)
         .promise();
+
       this.logger.info('Password reset confirmed successfully.');
+
       return res;
     } catch (e) {
       this.logger.error('Password reset confirmation failed: ' + e.message);
+
       throw new HttpException(
         'Password reset confirmation failed.',
         HttpStatus.BAD_REQUEST,
@@ -251,6 +246,7 @@ export class AuthService {
     }
   }
 
+  // 코드 다시보내기
   async resendConfirmationCode(emailDto: EmailDto) {
     const { email } = emailDto;
     const params = {
@@ -262,13 +258,15 @@ export class AuthService {
       const res = await this.cognitoClient
         .resendConfirmationCode(params)
         .promise();
+
       this.logger.info('Confirmation code resent successfully.');
+
       return res;
     } catch (e) {
       this.logger.error('Failed to resend confirmation code: ' + e.message);
       throw new HttpException(
         'Failed to resend confirmation code.',
-        HttpStatus.BAD_REQUEST,
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }

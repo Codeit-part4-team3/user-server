@@ -1,28 +1,36 @@
-import { Body, Controller, Get, Param, Put } from '@nestjs/common';
+import { Body, Controller, Request, UseGuards } from '@nestjs/common';
 import { UserService } from './user.service';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { StateDto } from './../dto/state.dto';
+import { JwtAuthGuard } from './../auth/jwt-auth-guard';
+import { failToken, unauthorized } from './../auth/api-response/tokenResponse';
+import {
+  MyInfoGet,
+  MyStateGet,
+  MyStatePut,
+} from '../decorators/userDecorators';
 
+@UseGuards(JwtAuthGuard)
+@ApiBearerAuth('accessToken')
+@unauthorized
+@failToken
 @ApiTags('user')
 @Controller('api/user/v1/user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  @Get(':id')
-  @ApiOperation({
-    summary: '유저 정보',
-  })
-  async getUser(@Param('id') id: string) {
-    return await this.userService.getUserById(+id);
+  @MyInfoGet('me')
+  async getUser(@Request() request) {
+    return await this.userService.getUserById(request.userId);
   }
 
-  @Get(':id/state')
-  async getState(@Param('id') id) {
-    return await this.userService.getState(+id);
+  @MyStateGet('me/state')
+  async getState(@Request() request) {
+    return await this.userService.getState(request.userId);
   }
 
-  @Put(':id/state')
-  async changeState(@Param('id') id, @Body() stateDto: StateDto) {
-    return await this.userService.changeState(+id, stateDto);
+  @MyStatePut('me/state')
+  async changeState(@Request() request, @Body() stateDto: StateDto) {
+    return await this.userService.changeState(request.userId, stateDto);
   }
 }
