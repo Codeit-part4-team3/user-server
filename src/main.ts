@@ -31,8 +31,12 @@ async function bootstrap() {
   SwaggerModule.setup('api/user/v1', app, document, {
     swaggerOptions: { defaultModelsExpandDepth: -1 },
   });
+
   app.enableCors({
-    origin: 'https://pqsoft.net/',
+    origin: 'https://pqsoft.net',
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    optionsSuccessStatus: 204,
+    allowedHeaders: '*',
   });
 
   await app.listen(80);
