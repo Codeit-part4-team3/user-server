@@ -15,7 +15,7 @@ import {
 @unauthorized
 @failToken
 @ApiTags('user')
-@Controller('api/user/v1/user')
+@Controller('/user/v1/user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
