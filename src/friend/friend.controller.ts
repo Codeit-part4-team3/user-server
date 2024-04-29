@@ -1,30 +1,54 @@
-import { Body, Controller, Get, Param, Post, Put } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Post,
+  Put,
+  Request,
+  UseGuards,
+} from '@nestjs/common';
 import { FriendService } from './friend.service';
-
 import { SendFriendDto } from './../dto/sendFriend.dto';
-import { UpdateFriendRequest } from './../dto/updateFriendRequset.dto';
+import { UpdateFriendRequest } from '../dto/updateFriendRequest.dto';
+import { ApiBearerAuth, ApiBody, ApiTags } from '@nestjs/swagger';
+import { EmailDto } from '../dto/email.dto';
+import { JwtAuthGuard } from './../auth/jwt-auth-guard';
 
-@Controller('api/user/v1/friend')
+@UseGuards(JwtAuthGuard)
+@ApiBearerAuth('accessToken')
+@ApiTags('friend')
+@Controller('/user/v1/friend')
 export class FriendController {
   constructor(private readonly friendService: FriendService) {}
 
   @Post('send')
-  async sendFriend(@Body() sendFriendDto: SendFriendDto) {
-    return await this.friendService.sendFriend(sendFriendDto);
+  @ApiBody({ type: SendFriendDto })
+  async sendFriend(@Request() request, @Body() emailDto: EmailDto) {
+    return await this.friendService.sendFriend({
+      email: emailDto.email,
+      userId: request.userId,
+    });
   }
 
-  @Get('receive/:id')
-  async getReceiveFriendRequest(@Param('id') id) {
-    return await this.friendService.getReceiveFriendRequest(+id);
+  @Get('receive')
+  async getReceiveFriendRequest(@Request() request) {
+    return await this.friendService.getReceiveFriendRequest(request.userId);
   }
 
   @Put('accepted')
-  async updateFriendRequest(@Body() updateFriendRequest: UpdateFriendRequest) {
-    await this.friendService.updateFriendRequest(updateFriendRequest);
+  @ApiBody({ type: UpdateFriendRequest })
+  async updateFriendRequest(
+    @Request() request,
+    @Body() updateFriendRequest: UpdateFriendRequest,
+  ) {
+    await this.friendService.updateFriendRequest(
+      request.userId,
+      updateFriendRequest,
+    );
   }
 
-  @Get('list/:id')
-  async getFriendList(@Param('id') id) {
-    return await this.friendService.getFriendList(+id);
+  @Get('list')
+  async getFriendList(@Request() request) {
+    return await this.friendService.getFriendList(request.userId);
   }
 }

@@ -9,6 +9,7 @@ import { AppService } from './app.service';
 import { FriendModule } from './friend/friend.module';
 import { LoggerModule } from './common/logger/logger.module';
 import { LoggingMiddleware } from './common/logger/logger.middleware';
+import { AuthService } from './auth/auth.service';
 
 @Module({
   imports: [
@@ -18,7 +19,7 @@ import { LoggingMiddleware } from './common/logger/logger.middleware';
     FriendModule,
   ],
   controllers: [UserController, AppController],
-  providers: [PrismaService, UserService, AppService],
+  providers: [PrismaService, UserService, AppService, AuthService],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

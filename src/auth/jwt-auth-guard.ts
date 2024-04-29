@@ -4,7 +4,6 @@ import {
   ExecutionContext,
   Injectable,
   UnauthorizedException,
-  Request,
 } from '@nestjs/common';
 
 @Injectable()
@@ -16,12 +15,12 @@ export class JwtAuthGuard implements CanActivate {
     const accessToken = request.headers['authorization']?.split(' ')[1];
 
     if (!accessToken) {
-      throw new UnauthorizedException('헤더에 토큰이 없습니다.');
+      throw new UnauthorizedException('Unauthorized');
     }
 
     const user = await this.authService.tokenGetUser(accessToken);
     if (!user || !user.email) {
-      throw new UnauthorizedException('유저가 없습니다.');
+      throw new UnauthorizedException('Unauthorized');
     }
 
     request['userId'] = user.id;

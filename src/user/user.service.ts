@@ -59,7 +59,7 @@ export class UserService {
   async createUser(signupDto: SignupDto) {
     const { email, nickname } = signupDto;
 
-    return this.prismaService.user.create({
+    return await this.prismaService.user.create({
       data: {
         email: email,
         nickname: nickname,
@@ -107,6 +107,7 @@ export class UserService {
     const { state } = stateDto;
 
     await this.getUserById(id);
+
     if (!['온라인', '오프라인', '자리비움'].includes(state)) {
       throw new HttpException('state가 틀렸습니다.', HttpStatus.NOT_FOUND);
     }
