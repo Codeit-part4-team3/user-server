@@ -270,4 +270,47 @@ export class AuthService {
       );
     }
   }
+
+  async kakaoLogin(email: string, code: string, nickname: string) {
+    try {
+      //로그인 시키기
+      const params = {
+        AuthFlow: 'ADMIN_NO_SRP_AUTH',
+        ClientId: process.env.COGNITO_CLIENT_ID,
+        UserPoolId: process.env.COGNITO_USER_POOL_ID,
+        AuthParameters: {
+          USERNAME: email, // 카카오로부터 받은 사용자 정보로 적절히 설정
+          REFRESH_TOKEN_AUTH: code, // 카카오에서 받은 인증 코드
+        },
+      };
+      const signInResult = await this.cognitoClient
+        .adminInitiateAuth(params)
+        .promise();
+      console.log(signInResult);
+    } catch (e) {
+      //cognito에 유저 없을때 회원가입처리
+      if ((e.code = 'UserNotFoundException')) {
+        const params = {
+          UserPoolId: '',
+          Username: email,
+          UserAttributes: [
+            {
+              Name: 'email',
+              Value: email,
+            },
+          ],
+          MessageAction: 'SUPPRESS', // 이메일 확인 절차 생략
+        };
+        const LoginRes = await this.cognitoClient
+          .adminCreateUser(params)
+          .promise();
+        const user = await this.userService.createUser({
+          email,
+          nickname,
+          password: '',
+        });
+        console.log(LoginRes, user);
+      }
+    }
+  }
 }

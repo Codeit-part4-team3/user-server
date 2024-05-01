@@ -32,10 +32,10 @@ async function bootstrap() {
     swaggerOptions: { defaultModelsExpandDepth: -1 },
   });
   app.enableCors({
-    origin: 'https://pqsoft.net/',
+    origin: ['https://pqsoft.net', 'http://localhost:5173'],
   });
 
-  await app.listen(80);
+  await app.listen(81);
   logger.log('Application is listening on port 80');
 }
 bootstrap();
