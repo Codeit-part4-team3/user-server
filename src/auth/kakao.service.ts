@@ -6,24 +6,33 @@ import { AuthService } from './auth.service';
 @Injectable()
 export class KakaoService {
   private readonly kakaoClientId: string;
-  private readonly redirectUri: string;
+  private readonly redirectLoginUri: string;
+  private readonly redirectSignupUri: string;
+  private readonly kakaoClientSecret: string;
   constructor(
     private readonly userService: UserService,
     private readonly authService: AuthService,
     private readonly configService: ConfigService,
   ) {
     this.kakaoClientId = this.configService.get<string>('KAKAO_CLIENT_ID');
-    this.redirectUri = this.configService.get<string>('REDIRECT_URI');
+    this.redirectLoginUri =
+      this.configService.get<string>('REDIRECT_LOGIN_URI');
+    this.redirectSignupUri = this.configService.get<string>(
+      'REDIRECT_SIGNUP_URI',
+    );
+    this.kakaoClientSecret = this.configService.get<string>(
+      'KAKAO_CLIENT_SECRET',
+    );
   }
 
-  async kakaoSign(code: string) {
+  async kakaoSign(code: string, redirectUri: string) {
     // 설정
     const config = {
       grant_type: 'authorization_code',
       client_id: this.kakaoClientId,
-      redirect_uri: this.redirectUri,
+      redirect_uri: redirectUri,
       code,
-      client_secret: 'BDUcviEUJqk3KDFTxXyHvbGONfVChhn0',
+      client_secret: this.kakaoClientSecret,
     };
 
     const params = new URLSearchParams(config).toString();
@@ -58,7 +67,7 @@ export class KakaoService {
 
   // 카카오로 로그인
   async kakaoLogin(code: string) {
-    const kakaoInfo = await this.kakaoSign(code);
+    const kakaoInfo = await this.kakaoSign(code, this.redirectLoginUri);
     const user = await this.userService.getUserByEmail(kakaoInfo.email);
 
     if (!user) {
@@ -73,7 +82,7 @@ export class KakaoService {
 
   // 카카오로 회원가입
   async kakaoSignUp(code: string) {
-    const kakaoInfo = await this.kakaoSign(code);
+    const kakaoInfo = await this.kakaoSign(code, this.redirectSignupUri);
 
     try {
       return await this.authService.signUp({
