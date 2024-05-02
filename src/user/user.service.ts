@@ -81,6 +81,7 @@ export class UserService {
         state: true,
       },
     });
+    console.log(res);
 
     const userInfo = {
       id: res.id,
