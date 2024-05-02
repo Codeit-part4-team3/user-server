@@ -31,11 +31,15 @@ async function bootstrap() {
   SwaggerModule.setup('api/user/v1', app, document, {
     swaggerOptions: { defaultModelsExpandDepth: -1 },
   });
+
   app.enableCors({
     origin: ['https://pqsoft.net', 'http://localhost:5173'],
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    optionsSuccessStatus: 204,
+    allowedHeaders: '*',
   });
 
-  await app.listen(81);
+  await app.listen(80);
   logger.log('Application is listening on port 80');
 }
 bootstrap();

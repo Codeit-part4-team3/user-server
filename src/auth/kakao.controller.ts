@@ -1,14 +1,17 @@
-import { Body, Controller, Get, Query } from '@nestjs/common';
+import { Controller, Get, Query } from '@nestjs/common';
 import { KakaoService } from './kakao.service';
 
-@Controller('api/user/v1/auth')
+@Controller('/user/v1/auth/')
 export class KakaoController {
   constructor(private readonly kakaoService: KakaoService) {}
 
-  @Get('kakao')
-  async getKakaoInfo(@Query('code') code: string) {
-    const apikey = '39b8385b093fea7bc538c1ce8697dffe';
-    const redirectUri = 'http://localhost:5173/oauth';
-    return await this.kakaoService.kakaoLogin(apikey, redirectUri, code);
+  @Get('kakao/signup')
+  async getKakaoSignUp(@Query('code') code: string) {
+    await this.kakaoService.kakaoSignUp(code);
+  }
+
+  @Get('kakao/login')
+  async getKakaoLogin(@Query('code') code: string) {
+    return await this.kakaoService.kakaoLogin(code);
   }
 }
