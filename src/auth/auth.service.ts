@@ -160,7 +160,10 @@ export class AuthService {
     } catch (e) {
       this.logger.error(`Login failed for ${loginDto.email}: ${e.message}`);
       if (e.code === 'UserNotConfirmedException') {
-        throw new HttpException(EMAIL_FORBIDDEN, HttpStatus.FORBIDDEN);
+        throw new HttpException(
+          { status: HttpStatus.FORBIDDEN, message: EMAIL_FORBIDDEN, email },
+          HttpStatus.FORBIDDEN,
+        );
       }
 
       throw new HttpException(LOGIN_BAD_REQUEST, HttpStatus.BAD_REQUEST);
