@@ -22,6 +22,7 @@ import {
 export class AuthService {
   private readonly cognitoClient: CognitoIdentityServiceProvider;
   private readonly clientId: string;
+
   constructor(
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
     private readonly configService: ConfigService,
@@ -59,7 +60,14 @@ export class AuthService {
         (it) => it.Name === 'email',
       ).Value;
 
-      return this.userService.getUserByEmail(email);
+      const user = await this.userService.getUserByEmail(email);
+      const userInfo = {
+        id: user.id,
+        email: user.email,
+        nickname: user.nickname,
+      };
+
+      return userInfo;
     } catch (_) {
       throw new HttpException(FAIL_TOKEN, HttpStatus.NOT_FOUND);
     }
@@ -132,7 +140,13 @@ export class AuthService {
 
     try {
       const res = await this.cognitoClient.initiateAuth(params).promise();
-      const userInfo = await this.userService.getUserByEmail(email);
+      const user = await this.userService.getUserByEmail(email);
+      const userInfo = {
+        id: user.id,
+        email: user.email,
+        nickname: user.nickname,
+        state: user['state'].name || null,
+      };
       const AuthenticationResult = res.AuthenticationResult;
       this.logger.info(`Login successful for ${loginDto.email}`);
 
