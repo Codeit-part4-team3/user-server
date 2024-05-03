@@ -33,13 +33,13 @@ async function bootstrap() {
   });
 
   app.enableCors({
-    origin: 'https://pqsoft.net',
+    origin: ['https://pqsoft.net', 'http://localhost:5173'],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     optionsSuccessStatus: 204,
     allowedHeaders: '*',
   });
 
-  await app.listen(80);
-  logger.log('Application is listening on port 80');
+  await app.listen(process.env.PORT);
+  logger.log(`Application is listening on port ${process.env.PORT}`);
 }
 bootstrap();
