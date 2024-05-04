@@ -81,11 +81,13 @@ export class GoogleService {
     const newPassword = generatePassword(10);
 
     try {
-      return await this.authService.signUp({
+      await this.authService.signUp({
         email: googleInfo.email,
         password: newPassword,
         nickname: googleInfo.nickname,
       });
+
+      return googleInfo.email;
     } catch (e) {
       throw new HttpException('이미 가입된 회원입니다.' + e, 409);
     }

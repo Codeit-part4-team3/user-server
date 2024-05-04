@@ -1,18 +1,22 @@
-import { Controller, Get, HttpCode, Query } from '@nestjs/common';
+import { Controller, Query } from '@nestjs/common';
 import { GoogleService } from './google.service';
+import {
+  GoogleLoginGet,
+  GoogleSignupGet,
+} from '../decorators/oauthDecoreators';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('oauth')
 @Controller('/user/v1/auth/')
 export class GoogleController {
   constructor(private readonly googleService: GoogleService) {}
 
-  @HttpCode(201)
-  @Get('google/signup')
+  @GoogleSignupGet('google/signup')
   async getKakaoSignUp(@Query('code') code: string) {
-    await this.googleService.googleSignUp(code);
+    return await this.googleService.googleSignUp(code);
   }
 
-  @HttpCode(200)
-  @Get('google/login')
+  @GoogleLoginGet('google/login')
   async getKakaoLogin(@Query('code') code: string) {
     return await this.googleService.googleLogin(code);
   }

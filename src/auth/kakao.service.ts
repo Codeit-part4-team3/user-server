@@ -94,11 +94,13 @@ export class KakaoService {
     const newPassword = generatePassword(10);
 
     try {
-      return await this.authService.signUp({
+      await this.authService.signUp({
         email: kakaoInfo.email,
         password: newPassword,
         nickname: kakaoInfo.nickname,
       });
+
+      return kakaoInfo.email;
     } catch (e) {
       throw new HttpException('이미 가입된 회원입니다.' + e, 409);
     }
