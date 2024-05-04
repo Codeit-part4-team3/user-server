@@ -2,6 +2,7 @@ import { ConfigService } from '@nestjs/config';
 import { HttpException, Injectable } from '@nestjs/common';
 import { UserService } from './../user/user.service';
 import { AuthService } from './auth.service';
+import { generatePassword } from '../util/generatePassword';
 
 @Injectable()
 export class KakaoService {
@@ -9,17 +10,21 @@ export class KakaoService {
   private readonly redirectLoginUri: string;
   private readonly redirectSignupUri: string;
   private readonly kakaoClientSecret: string;
+
   constructor(
     private readonly userService: UserService,
     private readonly authService: AuthService,
     private readonly configService: ConfigService,
   ) {
     this.kakaoClientId = this.configService.get<string>('KAKAO_CLIENT_ID');
+
     this.redirectLoginUri =
       this.configService.get<string>('REDIRECT_LOGIN_URI');
+
     this.redirectSignupUri = this.configService.get<string>(
       'REDIRECT_SIGNUP_URI',
     );
+
     this.kakaoClientSecret = this.configService.get<string>(
       'KAKAO_CLIENT_SECRET',
     );
@@ -46,6 +51,7 @@ export class KakaoService {
       method: 'POST',
       headers: tokenHeaders,
     });
+
     const dataToken = await resToken.json(); //각종 토큰들 있음
 
     // 카카오 access token으로 카카오 정보 가져오기
@@ -55,8 +61,10 @@ export class KakaoService {
         Authorization: `Bearer ${accessToken}`,
       },
     });
+
     const info = await userInfoResponse.json(); // 카카오톡 정보들 가져옴(이메일, 닉네임)
     const kakaoInfo = info['kakao_account'];
+
     const res = {
       email: kakaoInfo['email'],
       nickname: kakaoInfo['profile']['nickname'],
@@ -83,11 +91,12 @@ export class KakaoService {
   // 카카오로 회원가입
   async kakaoSignUp(code: string) {
     const kakaoInfo = await this.kakaoSign(code, this.redirectSignupUri);
+    const newPassword = generatePassword(10);
 
     try {
       return await this.authService.signUp({
         email: kakaoInfo.email,
-        password: kakaoInfo.email,
+        password: newPassword,
         nickname: kakaoInfo.nickname,
       });
     } catch (e) {

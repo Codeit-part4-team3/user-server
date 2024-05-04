@@ -8,7 +8,7 @@ export class KakaoController {
   @HttpCode(201)
   @Get('kakao/signup')
   async getKakaoSignUp(@Query('code') code: string) {
-    return await this.kakaoService.kakaoSignUp(code);
+    await this.kakaoService.kakaoSignUp(code);
   }
 
   @HttpCode(200)
