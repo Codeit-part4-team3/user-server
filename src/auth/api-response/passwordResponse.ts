@@ -1,4 +1,5 @@
 import { ApiResponse } from '@nestjs/swagger';
+import { EMAIL_REQUIRED } from '../../constants/message';
 
 export const forgotConfirmNotData = ApiResponse({
   status: 400,
@@ -6,7 +7,7 @@ export const forgotConfirmNotData = ApiResponse({
   content: {
     'application/json': {
       examples: {
-        example1: { value: { message: '이메일을 입력해주세요' } },
+        example1: { value: { message: EMAIL_REQUIRED } },
       },
     },
   },
@@ -18,7 +19,7 @@ export const forgotNotData = ApiResponse({
   content: {
     'application/json': {
       examples: {
-        example1: { value: { message: '이메일을 입력해주세요' } },
+        example1: { value: { message: EMAIL_REQUIRED } },
       },
     },
   },
