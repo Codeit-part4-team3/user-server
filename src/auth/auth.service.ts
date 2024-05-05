@@ -11,11 +11,11 @@ import { ChangePasswordDto } from './../dto/changePassword.dto';
 import { Logger } from 'winston';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import {
-  EMAIL_FORBIDDEN,
-  FAIL_CODE,
-  FAIL_TOKEN,
-  LOGIN_BAD_REQUEST,
-  USER_CONFLICT,
+  VERIFY_EMAIL_REQUEST,
+  FAIL_CODE_EXPIRED_OR_INVALID,
+  TOKEN_EXPIRED_OR_INVALID,
+  LOGIN_CREDENTIALS_INCORRECT,
+  USER_ALREADY_EXISTS,
 } from './../constants/message';
 
 @Injectable()
@@ -69,7 +69,7 @@ export class AuthService {
 
       return userInfo;
     } catch (_) {
-      throw new HttpException(FAIL_TOKEN, HttpStatus.NOT_FOUND);
+      throw new HttpException(TOKEN_EXPIRED_OR_INVALID, HttpStatus.NOT_FOUND);
     }
   }
 
@@ -91,7 +91,7 @@ export class AuthService {
       this.logger.error(`Signup failed for ${signupDto.email}: ${e.message}`);
 
       if (e.code === 'UsernameExistsException') {
-        throw new HttpException(USER_CONFLICT, HttpStatus.CONFLICT);
+        throw new HttpException(USER_ALREADY_EXISTS, HttpStatus.CONFLICT);
       }
 
       throw new HttpException(
@@ -121,7 +121,10 @@ export class AuthService {
         `Confirmation failed for ${confirmSignupDto.email}: ${e.message}`,
       );
 
-      throw new HttpException(FAIL_CODE, HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        FAIL_CODE_EXPIRED_OR_INVALID,
+        HttpStatus.BAD_REQUEST,
+      );
     }
   }
 
@@ -161,12 +164,19 @@ export class AuthService {
       this.logger.error(`Login failed for ${loginDto.email}: ${e.message}`);
       if (e.code === 'UserNotConfirmedException') {
         throw new HttpException(
-          { status: HttpStatus.FORBIDDEN, message: EMAIL_FORBIDDEN, email },
+          {
+            status: HttpStatus.FORBIDDEN,
+            message: VERIFY_EMAIL_REQUEST,
+            email,
+          },
           HttpStatus.FORBIDDEN,
         );
       }
 
-      throw new HttpException(LOGIN_BAD_REQUEST, HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        LOGIN_CREDENTIALS_INCORRECT,
+        HttpStatus.BAD_REQUEST,
+      );
     }
   }
 
@@ -188,7 +198,7 @@ export class AuthService {
       return res;
     } catch (e) {
       this.logger.error(`Password change failed: ${e.message}`);
-      throw new HttpException(FAIL_TOKEN, HttpStatus.BAD_REQUEST);
+      throw new HttpException(TOKEN_EXPIRED_OR_INVALID, HttpStatus.BAD_REQUEST);
     }
   }
 
@@ -209,7 +219,7 @@ export class AuthService {
       return { accessToken: res.AuthenticationResult.AccessToken };
     } catch (e) {
       this.logger.error('Token refresh failed: ' + e.message);
-      throw new HttpException(FAIL_TOKEN, HttpStatus.BAD_REQUEST);
+      throw new HttpException(TOKEN_EXPIRED_OR_INVALID, HttpStatus.BAD_REQUEST);
     }
   }
 

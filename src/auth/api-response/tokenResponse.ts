@@ -1,5 +1,5 @@
 import { ApiResponse } from '@nestjs/swagger';
-import { FAIL_TOKEN } from './../../constants/message';
+import { TOKEN_EXPIRED_OR_INVALID } from './../../constants/message';
 
 export const failToken = ApiResponse({
   status: 400,
@@ -7,7 +7,7 @@ export const failToken = ApiResponse({
   schema: {
     type: 'object',
     properties: {
-      message: { example: FAIL_TOKEN },
+      message: { example: TOKEN_EXPIRED_OR_INVALID },
     },
   },
 });

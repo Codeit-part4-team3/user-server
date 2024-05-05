@@ -1,8 +1,8 @@
 import { ApiResponse } from '@nestjs/swagger';
 import {
-  EMAIL_VALID,
-  PASSWORD_LENGTH,
-  USER_CONFLICT,
+  EMAIL_INVALID,
+  PASSWORD_LENGTH_REQUIREMENT,
+  USER_ALREADY_EXISTS,
 } from '../../constants/message';
 
 export const signupNotData = ApiResponse({
@@ -11,9 +11,9 @@ export const signupNotData = ApiResponse({
   content: {
     'application/json': {
       examples: {
-        example1: { value: { message: EMAIL_VALID } },
+        example1: { value: { message: EMAIL_INVALID } },
         example2: {
-          value: { message: PASSWORD_LENGTH },
+          value: { message: PASSWORD_LENGTH_REQUIREMENT },
         },
       },
     },
@@ -26,7 +26,7 @@ export const signupConflictException = ApiResponse({
   schema: {
     type: 'object',
     properties: {
-      message: { example: USER_CONFLICT },
+      message: { example: USER_ALREADY_EXISTS },
     },
   },
 });

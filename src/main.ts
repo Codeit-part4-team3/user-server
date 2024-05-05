@@ -21,6 +21,9 @@ async function bootstrap() {
     .setTitle('pq Server')
     .setDescription('pqsoft')
     .setVersion('1.0')
+    .addTag('auth')
+    .addTag('oauth')
+    .addTag('forgot')
     .addTag('user')
     .addBearerAuth(
       { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },

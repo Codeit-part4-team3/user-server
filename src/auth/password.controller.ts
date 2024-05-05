@@ -10,7 +10,7 @@ import {
   ForgotPost,
 } from 'src/decorators/authDecorators';
 
-@Controller('api/user/v1/')
+@Controller('user/v1/')
 export class PasswordController {
   constructor(private readonly authService: AuthService) {}
 
@@ -35,7 +35,7 @@ export class PasswordController {
   }
 
   // 비밀번호 변경
-  @ApiTags('auth')
+  @ApiTags('user')
   @ChangePasswordPut('user/password')
   @ApiBody({
     type: ChangePasswordDto,

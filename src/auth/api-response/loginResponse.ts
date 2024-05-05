@@ -1,5 +1,9 @@
 import { ApiResponse } from '@nestjs/swagger';
-import { EMAIL_FORBIDDEN, LOGIN_BAD_REQUEST } from '../../constants/message';
+import {
+  VERIFY_EMAIL_REQUEST,
+  LOGIN_CREDENTIALS_INCORRECT,
+  USER_NOT_REGISTERED,
+} from '../../constants/message';
 
 export const loginOk = ApiResponse({
   status: 200,
@@ -12,13 +16,7 @@ export const loginOk = ApiResponse({
           id: { example: 2 },
           email: { example: 'test@test.com' },
           nickName: { example: 'string' },
-          state: {
-            properties: {
-              id: { example: 1 },
-              name: { example: '온라인' },
-              userId: { example: 2 },
-            },
-          },
+          state: { example: 'string' },
         },
       },
       token: {
@@ -37,7 +35,7 @@ export const loginBadRequest = ApiResponse({
   schema: {
     type: 'object',
     properties: {
-      message: { example: LOGIN_BAD_REQUEST },
+      message: { example: LOGIN_CREDENTIALS_INCORRECT },
     },
   },
 });
@@ -48,7 +46,19 @@ export const loginForbidden = ApiResponse({
   schema: {
     type: 'object',
     properties: {
-      message: { example: EMAIL_FORBIDDEN },
+      message: { example: VERIFY_EMAIL_REQUEST },
+    },
+  },
+});
+
+export const LoginNotData = ApiResponse({
+  status: 404,
+  description: 'NotFound',
+  content: {
+    'application/json': {
+      examples: {
+        example1: { value: { message: USER_NOT_REGISTERED } },
+      },
     },
   },
 });
