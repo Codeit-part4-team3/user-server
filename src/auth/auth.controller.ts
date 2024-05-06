@@ -3,7 +3,7 @@ import {
   Controller,
   HttpException,
   HttpStatus,
-  Request,
+  Req,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { ApiBody, ApiTags } from '@nestjs/swagger';
@@ -18,6 +18,7 @@ import {
   SignUpPost,
   SignUpResentCodePost,
 } from '../decorators/authDecorators';
+import { Request } from 'express';
 
 @ApiTags('auth')
 @Controller('/user/v1/auth')
@@ -53,11 +54,13 @@ export class AuthController {
   }
 
   //토큰 갱신
-  @AccessTokenGet('token')
-  async getToken(@Request() request) {
-    const [type, token] = request.headers.authorization?.split(' ') ?? [];
 
-    if (type !== 'Bearer' || !token) {
+  @AccessTokenGet('token')
+  async getToken(@Req() request: Request) {
+    const token = request?.cookies['refreshToken'];
+    console.log(token);
+
+    if (!token) {
       throw new HttpException('토큰이 없습니다.', HttpStatus.NOT_FOUND);
     }
 
