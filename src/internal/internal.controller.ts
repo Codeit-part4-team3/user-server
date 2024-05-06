@@ -1,6 +1,6 @@
 import { Body, Controller, HttpCode, Post } from '@nestjs/common';
 import { InternalService } from './internal.service';
-import { UserByIdsDto, VerifyEmailDto } from 'src/dto/internal.dto';
+import { UserByIdsDto, VerifyEmailDto } from '../dto/internal.dto';
 import { User } from '@prisma/client';
 
 @Controller('internal/v1')
