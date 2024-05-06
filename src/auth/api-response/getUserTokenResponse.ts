@@ -1,4 +1,5 @@
 import { ApiResponse } from '@nestjs/swagger';
+import { TOKEN_MISSING } from './../../constants/message';
 
 export const getUserTokenNotData = ApiResponse({
   status: 400,
@@ -6,7 +7,7 @@ export const getUserTokenNotData = ApiResponse({
   content: {
     'application/json': {
       examples: {
-        example1: { value: { message: '헤더에 토큰이 없습니다.' } },
+        example1: { value: { message: TOKEN_MISSING } },
       },
     },
   },

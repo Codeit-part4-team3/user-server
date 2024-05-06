@@ -27,7 +27,14 @@ export class UserService {
       );
     }
 
-    return user;
+    const userInfo = {
+      id: user.id,
+      email: user.email,
+      nickname: user.nickname,
+      state: user.state.name || null,
+    };
+
+    return userInfo;
   }
 
   async getUserByEmail(email: string): Promise<User | null> {
@@ -57,12 +64,13 @@ export class UserService {
   }
 
   async createUser(signupDto: SignupDto) {
-    const { email, nickname } = signupDto;
+    const { email, nickname, password } = signupDto;
 
-    return await this.prismaService.user.create({
+    const res = await this.prismaService.user.create({
       data: {
-        email: email,
-        nickname: nickname,
+        email,
+        nickname,
+        password,
         state: {
           create: {
             name: '오프라인',
@@ -73,6 +81,15 @@ export class UserService {
         state: true,
       },
     });
+    console.log(res);
+
+    const userInfo = {
+      id: res.id,
+      email: res.email,
+      nickname: res.nickname,
+      state: res.state.name,
+    };
+    return userInfo;
   }
 
   async updateUserNickname({
