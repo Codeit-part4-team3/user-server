@@ -10,6 +10,7 @@ import { FriendModule } from './friend/friend.module';
 import { LoggerModule } from './common/logger/logger.module';
 import { LoggingMiddleware } from './common/logger/logger.middleware';
 import { AuthService } from './auth/auth.service';
+import { PaymentsModule } from './payments/payments.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { AuthService } from './auth/auth.service';
     AuthModule,
     ConfigModule.forRoot({ isGlobal: true }),
     FriendModule,
+    PaymentsModule,
   ],
   controllers: [UserController, AppController],
   providers: [PrismaService, UserService, AppService, AuthService],

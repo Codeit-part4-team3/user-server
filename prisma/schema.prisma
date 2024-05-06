@@ -41,3 +41,9 @@ model SendFriend {
   @@unique([sendUserId, receiveUserId]) 
   @@id([sendUserId, receiveUserId])
 }
+
+model TempOrder {
+  tempOrderId  String   @id @default(uuid()) @db.VarChar(25)
+  orderName    String   @db.VarChar(50)
+  totalAmount  Int
+}
