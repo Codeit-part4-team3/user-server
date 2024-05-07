@@ -23,4 +23,14 @@ export class PaymentsController {
   confirmPayment(@Body() confirmPaymentDto: ConfirmPaymentDto) {
     return this.paymentsService.confirmPayment(confirmPaymentDto);
   }
+
+  @Get('subscription')
+  getSubscriptionsByUserId(@Request() req) {
+    return this.paymentsService.getSubscriptionsByUserId(req.user.userId);
+  }
+
+  @Get('payments')
+  getPaymentsByUserId(@Request() req) {
+    return this.paymentsService.getPaymentsByUserId(req.user.userId);
+  }
 }

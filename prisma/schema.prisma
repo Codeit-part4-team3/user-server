@@ -22,7 +22,6 @@ model User {
   
   payment        Payment[]
   subscriptions  Subscription[]
-  paymentMethods PaymentMethod[]
 }
 
 model FriendList {
@@ -58,18 +57,6 @@ enum PaymentCycle {
   IRREGULAR
 }
 
-enum PaymentStatus {
-  INITIATED
-  COMPLETED
-  FAILED
-}
-
-enum RefundStatus {
-  PENDING
-  APPROVED
-  DENIED
-}
-
 model TempOrder {
   tempOrderId  String   @id @default(uuid()) @db.VarChar(25)
   orderName    String   @db.VarChar(50)
@@ -92,14 +79,12 @@ model Payment {
   planId          Int
   subscriptionId  Int
   amount          Int
-  status          PaymentStatus
+  status          String
   createdAt       DateTime     @default(now())
-  paymentMethodId Int
 
   user            User         @relation(fields: [userId], references: [id])
   plan            Plan         @relation(fields: [planId], references: [id])
-  subscription    Subscription @relation(fields: [subscriptionId], references: [id])
-  paymentMethod   PaymentMethod @relation(fields: [paymentMethodId], references: [id])
+  subscription    Subscription         @relation(fields: [subscriptionId], references: [id])
   refunds         Refund[]
 }
 
@@ -117,21 +102,12 @@ model Subscription {
   payments Payment[]
 }
 
-model PaymentMethod {
-  id          Int      @id @default(autoincrement())
-  userId      Int
-  type       String
-  billingKey String? @db.VarChar(20)
-
-  user        User     @relation(fields: [userId], references: [id])
-  payments Payment[]
-}
 
 model Refund {
   id          Int      @id @default(autoincrement())
   paymentId   Int
   amount      Int
-  status      RefundStatus
+  status      String
   createdAt   DateTime @default(now())
 
   payment    Payment   @relation(fields: [paymentId], references: [id])
