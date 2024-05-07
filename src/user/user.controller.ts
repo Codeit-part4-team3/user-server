@@ -1,4 +1,12 @@
-import { Body, Controller, Request, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Post,
+  Request,
+  UploadedFile,
+  UseGuards,
+  UseInterceptors,
+} from '@nestjs/common';
 import { UserService } from './user.service';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { StateDto } from './../dto/state.dto';
@@ -9,15 +17,22 @@ import {
   MyStateGet,
   MyStatePut,
 } from '../decorators/userDecorators';
+import { FileInterceptor } from '@nestjs/platform-express';
 
-@UseGuards(JwtAuthGuard)
-@ApiBearerAuth('accessToken')
+// @UseGuards(JwtAuthGuard)
+// @ApiBearerAuth('accessToken')
 @unauthorized
 @failToken
 @ApiTags('user')
 @Controller('/user/v1/user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
+
+  @Post('upload')
+  @UseInterceptors(FileInterceptor('file'))
+  async uploadImage(@UploadedFile() file: Express.Multer.File) {
+    return await this.userService.upload(file);
+  }
 
   @MyInfoGet('me')
   async getUser(@Request() request) {
