@@ -4,17 +4,22 @@ import { ConfirmPaymentDto } from 'src/dto/confirmPayment.dto';
 import { v4 as uuidv4 } from 'uuid';
 import { TempOrdersService } from './tempOrders.service';
 import { CardIssuerCode, CardIssuerName } from './config/payment.config';
+import { PrismaService } from 'src/prisma.service';
 
 @Injectable()
 export class PaymentsService {
   private readonly tossUrl = 'https://api.tosspayments.com/v1/payments/confirm';
   private readonly secretKey = process.env.TOSS_SECRET_KEY;
 
-  constructor(private readonly tempOrdersService: TempOrdersService) {}
+  constructor(
+    private readonly tempOrdersService: TempOrdersService,
+    private readonly prismaService: PrismaService,
+  ) {}
 
-  public async confirmPayment(confirmPaymentDto: ConfirmPaymentDto) {
+  // 결제
+  async confirmPayment(confirmPaymentDto: ConfirmPaymentDto) {
+    const { userId, planId, orderId, amount, paymentKey } = confirmPaymentDto;
     const idempotency = uuidv4(); // 멱등키 생성
-    const { orderId, amount, paymentKey } = confirmPaymentDto;
 
     try {
       const response = await axios.post(
@@ -55,26 +60,55 @@ export class PaymentsService {
 
       // 결제 수단
       const method = response.data.method;
+      let paymentMethod: string;
 
-      let paymentMethod: string = '알 수 없음';
+      switch (method) {
+        case '카드':
+          // 발급사 코드에 따른 발급사명 리턴
+          const issuerCode: CardIssuerCode = response.data.card.issuerCode;
+          paymentMethod = CardIssuerName[issuerCode];
+          break;
 
-      if (method === '카드') {
-        // 발급사 코드에 따른 발급사명 리턴
-        const issuerCode: CardIssuerCode = response.data.card.issuerCode;
-        paymentMethod = CardIssuerName[issuerCode];
+        case '간편결제':
+          paymentMethod = response.data.easyPay.provider;
+          break;
+
+        case '휴대폰':
+          paymentMethod = response.data.method;
+          break;
+
+        default:
+          paymentMethod = '알 수 없음';
+          break;
       }
 
-      if (method === '간편결제') {
-        paymentMethod = response.data.easyPay.provider;
-      }
+      // 결제 수단 저장
+      const paymentMethodRecord = await this.createPaymentMethod(
+        userId,
+        paymentMethod,
+        response.data.billingKey,
+      );
 
-      if (method === '휴대폰') {
-        paymentMethod = response.data.method;
-      }
+      // 구독 데이터 저장
+      const subscriptionRecord = await this.createSubscription(
+        userId,
+        planId,
+        response.data,
+      );
+
+      // 결제 데이터 저장
+      const paymentRecord = await this.savePaymentDetails(
+        subscriptionRecord.id,
+        userId,
+        planId,
+        paymentMethodRecord.id,
+        response.data,
+      );
 
       return {
         title: '결제 성공',
         paymentMethod,
+        paymentRecord,
         data: response.data,
       };
     } catch (err) {
@@ -87,5 +121,51 @@ export class PaymentsService {
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
+  }
+
+  // 결제 수단 저장
+  async createPaymentMethod(userId: number, type: string, billingKey: any) {
+    return await this.prismaService.paymentMethod.create({
+      data: {
+        userId,
+        type,
+        billingKey,
+      },
+    });
+  }
+
+  // 구독 저장
+  async createSubscription(userId: number, planId: number, responseData: any) {
+    return await this.prismaService.subscription.create({
+      data: {
+        userId,
+        planId,
+        isActive: true,
+        startDate: new Date(responseData.approvedAt),
+        endDate: new Date(responseData.approvedAt),
+        paymentCycle: 'IRREGULAR',
+      },
+    });
+  }
+
+  // 결제내역 저장
+  async savePaymentDetails(
+    userId: number,
+    planId: number,
+    subscriptionId: number,
+    paymentMethodId: number,
+    responseData: any,
+  ) {
+    return await this.prismaService.payment.create({
+      data: {
+        userId,
+        planId,
+        subscriptionId: subscriptionId,
+        paymentMethodId,
+        amount: responseData.totalAmount,
+        status: responseData.status,
+        createdAt: new Date(responseData.approvedAt),
+      },
+    });
   }
 }

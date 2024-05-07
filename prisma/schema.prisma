@@ -19,6 +19,10 @@ model User {
   nickname  String
   password  String
   state    State?
+  
+  payment        Payment[]
+  subscriptions  Subscription[]
+  paymentMethods PaymentMethod[]
 }
 
 model FriendList {
@@ -42,8 +46,93 @@ model SendFriend {
   @@id([sendUserId, receiveUserId])
 }
 
+// 결제
+
+enum PlanType {
+  MONTHLY
+  YEARLY
+}
+
+enum PaymentCycle {
+  REGULAR
+  IRREGULAR
+}
+
+enum PaymentStatus {
+  INITIATED
+  COMPLETED
+  FAILED
+}
+
+enum RefundStatus {
+  PENDING
+  APPROVED
+  DENIED
+}
+
 model TempOrder {
   tempOrderId  String   @id @default(uuid()) @db.VarChar(25)
   orderName    String   @db.VarChar(50)
   totalAmount  Int
+}
+
+model Plan {
+  id          Int      @id @default(autoincrement())
+  type        PlanType
+  price       Int
+  duration    Int      @default(12)
+
+  subscriptions Subscription[]
+  payments Payment[]
+}
+
+model Payment {
+  id              Int          @id @default(autoincrement())
+  userId          Int
+  planId          Int
+  subscriptionId  Int
+  amount          Int
+  status          PaymentStatus
+  createdAt       DateTime     @default(now())
+  paymentMethodId Int
+
+  user            User         @relation(fields: [userId], references: [id])
+  plan            Plan         @relation(fields: [planId], references: [id])
+  subscription    Subscription @relation(fields: [subscriptionId], references: [id])
+  paymentMethod   PaymentMethod @relation(fields: [paymentMethodId], references: [id])
+  refunds         Refund[]
+}
+
+model Subscription {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  planId      Int
+  startDate   DateTime @default(now())
+  endDate     DateTime
+  isActive    Boolean  @default(false)
+  paymentCycle PaymentCycle
+
+  user    User    @relation(fields: [userId], references: [id])
+  plan    Plan    @relation(fields: [planId], references: [id])
+  payments Payment[]
+}
+
+model PaymentMethod {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  type       String
+  billingKey String? @db.VarChar(20)
+
+  user        User     @relation(fields: [userId], references: [id])
+  payments Payment[]
+}
+
+model Refund {
+  id          Int      @id @default(autoincrement())
+  paymentId   Int
+  amount      Int
+  status      RefundStatus
+  createdAt   DateTime @default(now())
+
+  payment    Payment   @relation(fields: [paymentId], references: [id])
 }

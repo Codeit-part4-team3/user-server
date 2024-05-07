@@ -4,7 +4,7 @@ import { PrismaService } from '../prisma.service';
 
 @Injectable()
 export class TempOrdersService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prismaService: PrismaService) {}
 
   // 랜덤 주문 ID 생성
   generateRandomOrderId(length: number): string {
@@ -19,15 +19,10 @@ export class TempOrdersService {
   }
 
   // 가주문 생성
-  async createTempOrder(orderData: {
-    orderName: string;
-    pointAmount: number;
-    couponAmount: number;
-    totalAmount: number;
-  }) {
+  async createTempOrder(orderData: { orderName: string; totalAmount: number }) {
     const tempOrderId = this.generateRandomOrderId(25); // 랜덤 주문 ID
     try {
-      const order = await this.prisma.tempOrder.create({
+      const order = await this.prismaService.tempOrder.create({
         data: {
           tempOrderId,
           ...orderData,
@@ -43,9 +38,9 @@ export class TempOrdersService {
   }
 
   // 가주문 조회
-  public async getTempOrdersData(orderId: string) {
+  async getTempOrdersData(orderId: string) {
     try {
-      const order = await this.prisma.tempOrder.findUnique({
+      const order = await this.prismaService.tempOrder.findUnique({
         where: { tempOrderId: orderId },
       });
       if (!order) {
