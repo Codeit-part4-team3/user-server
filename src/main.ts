@@ -42,7 +42,7 @@ async function bootstrap() {
     allowedHeaders: '*',
   });
 
-  await app.listen(80);
-  logger.log('Application is listening on port 80');
+  await app.listen(process.env.PORT);
+  logger.log(`Application is listening on port ${process.env.PORT}`);
 }
 bootstrap();
