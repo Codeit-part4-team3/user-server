@@ -10,6 +10,7 @@ import { FriendModule } from './friend/friend.module';
 import { LoggerModule } from './common/logger/logger.module';
 import { LoggingMiddleware } from './common/logger/logger.middleware';
 import { AuthService } from './auth/auth.service';
+import { InternalModule } from './internal/internal.module';
 import { PaymentsModule } from './payments/payments.module';
 import { PlanModule } from './plan/plan.module';
 
@@ -19,6 +20,7 @@ import { PlanModule } from './plan/plan.module';
     AuthModule,
     ConfigModule.forRoot({ isGlobal: true }),
     FriendModule,
+    InternalModule,
     PaymentsModule,
     PlanModule,
   ],

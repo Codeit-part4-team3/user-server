@@ -21,6 +21,9 @@ async function bootstrap() {
     .setTitle('pq Server')
     .setDescription('pqsoft')
     .setVersion('1.0')
+    .addTag('auth')
+    .addTag('oauth')
+    .addTag('forgot')
     .addTag('user')
     .addBearerAuth(
       { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },
@@ -36,10 +39,11 @@ async function bootstrap() {
     origin: ['https://pqsoft.net', 'http://localhost:5173'],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     optionsSuccessStatus: 204,
-    allowedHeaders: '*',
+    allowedHeaders: ['authorization', 'Content-Type'],
+    credentials: true,
   });
 
-  await app.listen(80);
-  logger.log('Application is listening on port 80');
+  await app.listen(process.env.PORT);
+  logger.log(`Application is listening on port ${process.env.PORT}`);
 }
 bootstrap();
