@@ -224,7 +224,7 @@ export class PaymentsService {
 
       const response = await this.prismaService.subscription.update({
         where: { id: subscription.id },
-        data: { planId, startDate },
+        data: { planId, startDate, isActive: true },
       });
 
       this.logger.info('구독 업데이트 완료');
