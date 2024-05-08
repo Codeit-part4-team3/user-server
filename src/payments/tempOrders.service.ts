@@ -54,4 +54,19 @@ export class TempOrdersService {
       );
     }
   }
+
+  // 가주문 삭제
+  async deleteTempOrder(orderId: string) {
+    try {
+      const order = await this.prismaService.tempOrder.delete({
+        where: { tempOrderId: orderId },
+      });
+      return order;
+    } catch (error) {
+      throw new HttpException(
+        'Failed to delete temporary order',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
 }

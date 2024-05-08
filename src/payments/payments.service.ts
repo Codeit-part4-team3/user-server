@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
 import axios from 'axios';
 import { ConfirmPaymentDto } from 'src/dto/confirmPayment.dto';
 import { v4 as uuidv4 } from 'uuid';
@@ -6,6 +6,9 @@ import { TempOrdersService } from './tempOrders.service';
 import { CardIssuerCode, CardIssuerName } from './config/payment.config';
 import { PrismaService } from 'src/prisma.service';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
+import { Logger } from 'winston';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class PaymentsService {
@@ -13,6 +16,8 @@ export class PaymentsService {
   private readonly secretKey = process.env.TOSS_SECRET_KEY;
 
   constructor(
+    @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
+    private readonly configService: ConfigService,
     private readonly tempOrdersService: TempOrdersService,
     private readonly prismaService: PrismaService,
   ) {}
@@ -24,6 +29,7 @@ export class PaymentsService {
    * 3. 결제 완료 응답 데이터를 가주문(tempOrders) 테이블과 비교
    * 4. 결제 완료 응답 데이터를 구독(subscriptions) 테이블에 저장
    * 5. 결제 완료 응답 데이터를 결제내역(payments) 테이블에 저장
+   * 6. 가주문(tempOrders) 테이블에서 해당 주문 삭제
    *
    * @param {ConfirmPaymentDto} confirmPaymentDto - 결제 승인 요청 데이터
    * @returns {Promise<PaymentResponseDto>} 결제 처리 결과를 반환
@@ -66,6 +72,7 @@ export class PaymentsService {
           HttpStatus.BAD_REQUEST,
         );
       }
+      this.logger.info('가주문 비교 완료');
 
       // 결제 수단
       const method = response.data.method;
@@ -86,8 +93,8 @@ export class PaymentsService {
           break;
       }
 
+      // 구독 생성 또는 업데이트
       const subscription = await this.getSubscriptionsByUserId(userId);
-
       if (subscription) {
         // 기존 구독이 있을 경우 업데이트
         await this.updateSubscription(userId, planId);
@@ -100,6 +107,7 @@ export class PaymentsService {
           true,
         );
       }
+      this.logger.info('구독 생성 또는 업데이트 완료');
 
       // 결제 데이터 저장
       const payment = await this.createPayment(
@@ -110,13 +118,20 @@ export class PaymentsService {
         paymentKey,
         new Date(response.data.approvedAt),
       );
+      this.logger.info('결제내역 생성 완료');
 
+      // 가주문 삭제
+      await this.tempOrdersService.deleteTempOrder(orderId);
+      this.logger.info('가주문 삭제 완료');
+
+      this.logger.info('결제 성공');
       return {
         title: '결제 성공',
         paymentMethod,
         payment,
       };
     } catch (err) {
+      this.logger.error(`결제 실패: ${err.response.data.message}`);
       const customErrorResponse = {
         code: err.response.data.code,
         message: err.response.data.message,
@@ -152,9 +167,10 @@ export class PaymentsService {
           plan: true,
         },
       });
+      this.logger.info('구독 조회 완료');
       return subscriptions;
     } catch (error) {
-      console.error('Error retrieving subscriptions:', error);
+      this.logger.error('구독 조회 실패:', error);
       throw new HttpException(
         'Failed to retrieve subscriptions',
         HttpStatus.INTERNAL_SERVER_ERROR,
@@ -182,9 +198,10 @@ export class PaymentsService {
           isActive: isActive,
         },
       });
+      this.logger.info('구독 생성 완료');
       return response;
     } catch (error) {
-      console.error('Subscription creation failed:', error);
+      this.logger.error('구독 생성 실패:', error);
       throw new HttpException(
         'Subscription creation failed',
         HttpStatus.INTERNAL_SERVER_ERROR,
@@ -209,9 +226,10 @@ export class PaymentsService {
         data: { planId, startDate },
       });
 
+      this.logger.info('구독 업데이트 완료');
       return response;
     } catch (error) {
-      console.error('Failed to update subscription:', error);
+      this.logger.error('구독 업데이트 실패:', error);
       throw new HttpException(
         'Failed to update subscription',
         HttpStatus.INTERNAL_SERVER_ERROR,
@@ -232,9 +250,11 @@ export class PaymentsService {
           plan: true,
         },
       });
+
+      this.logger.info('결제내역 조회 완료');
       return payments;
     } catch (error) {
-      console.error('Error retrieving payments:', error);
+      this.logger.error('결제내역 조회 실패:', error);
       throw new HttpException(
         'Failed to retrieve payments',
         HttpStatus.INTERNAL_SERVER_ERROR,
@@ -255,9 +275,11 @@ export class PaymentsService {
           plan: true,
         },
       });
+
+      this.logger.info('결제내역 조회 완료');
       return payment;
     } catch (error) {
-      console.error('Error retrieving payment:', error);
+      this.logger.error('결제내역 조회 실패:', error);
       throw new HttpException(
         'Failed to retrieve payment',
         HttpStatus.INTERNAL_SERVER_ERROR,
@@ -285,9 +307,11 @@ export class PaymentsService {
           createdAt: new Date(createdAt),
         },
       });
+
+      this.logger.info('결제내역 생성 완료');
       return response;
     } catch (error) {
-      console.error('Payment creation failed:', error);
+      this.logger.error('결제내역 생성 실패:', error);
       throw new HttpException(
         'Payment creation failed',
         HttpStatus.INTERNAL_SERVER_ERROR,
@@ -304,6 +328,7 @@ export class PaymentsService {
     });
 
     if (!payment) {
+      this.logger.error('결제 내역을 찾을 수 없습니다.');
       throw new HttpException(
         '결제 내역을 찾을 수 없습니다.',
         HttpStatus.NOT_FOUND,
@@ -311,6 +336,7 @@ export class PaymentsService {
     }
 
     if (payment.createdAt.getTime() + 3 * 24 * 60 * 60 * 1000 < Date.now()) {
+      this.logger.error('결제 후 3일 이내에만 취소할 수 있습니다.');
       throw new HttpException(
         '결제 후 3일 이내에만 취소할 수 있습니다.',
         HttpStatus.BAD_REQUEST,
@@ -320,11 +346,14 @@ export class PaymentsService {
     const paymentKey = payment.paymentKey;
 
     if (!paymentKey) {
+      this.logger.error('결제 키가 없습니다.');
       throw new HttpException(
         '결제 키가 없습니다.',
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
+
+    this.logger.info('환불 요청 시작');
 
     try {
       await axios.post(
@@ -342,8 +371,20 @@ export class PaymentsService {
       // 결제 상태 업데이트
       await this.prismaService.payment.update({
         where: { id: paymentId },
-        data: { status: 'CANCELLED' },
+        data: { status: 'REFUNDED' },
       });
+      this.logger.info('결제 상태 업데이트 완료');
+
+      // 구독 비활성화
+      const subscription = await this.updateSubscription(
+        payment.userId,
+        payment.planId,
+      );
+      await this.prismaService.subscription.update({
+        where: { id: subscription.id },
+        data: { isActive: false },
+      });
+      this.logger.info('구독 비활성화 완료');
 
       // 환불 기록 생성
       const refund = await this.prismaService.refund.create({
@@ -354,13 +395,15 @@ export class PaymentsService {
           createdAt: new Date(),
         },
       });
+      this.logger.info('환불내역 생성 완료');
 
+      this.logger.info('환불 완료');
       return {
         message: '환불 완료',
         refund,
       };
     } catch (error) {
-      console.error('환불 요청 실패:', error);
+      this.logger.error(`환불 실패: ${error.response.data.message}`);
       throw new HttpException(
         `${error.response.data.message}`,
         HttpStatus.INTERNAL_SERVER_ERROR,
