@@ -9,11 +9,11 @@ import {
   Param,
 } from '@nestjs/common';
 import { PaymentsService } from './payments.service';
-import { ConfirmPaymentDto } from 'src/dto/confirmPayment.dto';
+import { ConfirmPaymentDto } from '../dto/confirmPayment.dto';
 import { ApiBearerAuth, ApiBody, ApiTags } from '@nestjs/swagger';
-import { JwtAuthGuard } from 'src/auth/jwt-auth-guard';
-import { UpdateSubscriptionDto } from 'src/dto/updateSubscription.dto';
-import { CancelPaymentDto } from 'src/dto/cancelPayment.dto';
+import { JwtAuthGuard } from './../auth/jwt-auth-guard';
+import { UpdateSubscriptionDto } from '../dto/updateSubscription.dto';
+import { CancelPaymentDto } from '../dto/cancelPayment.dto';
 
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth('accessToken')

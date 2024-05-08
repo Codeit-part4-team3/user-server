@@ -1,10 +1,10 @@
 import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
 import axios from 'axios';
-import { ConfirmPaymentDto } from 'src/dto/confirmPayment.dto';
+import { ConfirmPaymentDto } from '../dto/confirmPayment.dto';
 import { v4 as uuidv4 } from 'uuid';
 import { TempOrdersService } from './tempOrders.service';
 import { CardIssuerCode, CardIssuerName } from './config/payment.config';
-import { PrismaService } from 'src/prisma.service';
+import { PrismaService } from '../prisma.service';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { Logger } from 'winston';

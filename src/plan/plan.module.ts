@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common';
 import { PlanService } from './plan.service';
 import { PlanController } from './plan.controller';
-import { PrismaService } from 'src/prisma.service';
-import { AuthService } from 'src/auth/auth.service';
-import { UserService } from 'src/user/user.service';
+import { PrismaService } from '../prisma.service';
+import { AuthService } from '../auth/auth.service';
+import { UserService } from '../user/user.service';
 
 @Module({
   providers: [PlanService, PrismaService, AuthService, UserService],
