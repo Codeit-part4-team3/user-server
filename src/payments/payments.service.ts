@@ -135,7 +135,7 @@ export class PaymentsService {
    * 3. 구독 업데이트
    * 4. 결제내역 조회
    * 5. 결제내역 생성
-   * 6. 결제 취소
+   * 6. 환불내역 생성
    * 7. 매일 자정 만료 구독 비활성화
    */
 
@@ -295,8 +295,10 @@ export class PaymentsService {
     }
   }
 
-  // 결제 취소
+  // 환불내역 생성
   async cancelPayment(paymentId: number, cancelReason: string) {
+    const idempotency = uuidv4(); // 멱등키
+
     const payment = await this.prismaService.payment.findUnique({
       where: { id: paymentId },
     });
@@ -314,26 +316,28 @@ export class PaymentsService {
         HttpStatus.BAD_REQUEST,
       );
     }
-    console.log(payment);
+
+    const paymentKey = payment.paymentKey;
+
+    if (!paymentKey) {
+      throw new HttpException(
+        '결제 키가 없습니다.',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
 
     try {
-      const cancelResponse = await axios.post(
-        `${this.tossUrl}/${payment.paymentKey}/cancel`,
+      await axios.post(
+        `${this.tossUrl}/${paymentKey}/cancel`,
         { cancelReason },
         {
           headers: {
             Authorization: `Basic ${btoa(`${this.secretKey}:`)}`,
             'Content-Type': 'application/json',
+            'Idempotency-Key': `${idempotency}`,
           },
         },
       );
-
-      if (cancelResponse.data.status !== 'CANCELLED') {
-        throw new HttpException(
-          '결제 취소 실패',
-          HttpStatus.INTERNAL_SERVER_ERROR,
-        );
-      }
 
       // 결제 상태 업데이트
       await this.prismaService.payment.update({
@@ -345,20 +349,20 @@ export class PaymentsService {
       const refund = await this.prismaService.refund.create({
         data: {
           paymentId: paymentId,
-          amount: Number(payment.amount),
+          amount: payment.amount,
           status: 'REFUNDED',
           createdAt: new Date(),
         },
       });
 
       return {
-        message: '결제 취소 완료',
+        message: '환불 완료',
         refund,
       };
     } catch (error) {
-      console.error('결제 취소 요청 실패:', error);
+      console.error('환불 요청 실패:', error);
       throw new HttpException(
-        '결제 취소 처리 중 오류가 발생했습니다.',
+        `${error.response.data.message}`,
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }

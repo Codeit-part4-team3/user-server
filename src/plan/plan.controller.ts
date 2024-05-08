@@ -16,6 +16,11 @@ import { JwtAuthGuard } from 'src/auth/jwt-auth-guard';
 export class PlanController {
   constructor(private readonly planService: PlanService) {}
 
+  @Get('all')
+  async getAllPlans() {
+    return await this.planService.getAllPlans();
+  }
+
   @Get(':planId')
   async getPlan(@Param('planId', ParseIntPipe) planId: number) {
     return await this.planService.getPlanByPlanId(planId);

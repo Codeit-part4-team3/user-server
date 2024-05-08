@@ -5,6 +5,20 @@ import { PrismaService } from 'src/prisma.service';
 export class PlanService {
   constructor(private prismaService: PrismaService) {}
 
+  // 모든 플랜 조회
+  async getAllPlans() {
+    try {
+      const plans = await this.prismaService.plan.findMany();
+
+      return plans;
+    } catch (error) {
+      throw new HttpException(
+        'Failed to retrieve plan data',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
   // 플랜 ID로 플랜 정보 조회
   async getPlanByPlanId(planId: number) {
     try {
