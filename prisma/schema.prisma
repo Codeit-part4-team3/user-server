@@ -68,7 +68,7 @@ model Plan {
 }
 
 model Payment {
-  id              Int          @id @default(autoincrement())
+  orderId         String      @id @db.VarChar(25)
   userId          Int
   planId          Int
   amount          Int
@@ -95,10 +95,10 @@ model Subscription {
 
 model Refund {
   id          Int      @id @default(autoincrement())
-  paymentId   Int
+  orderId     String
   amount      Int
   status      String
   createdAt   DateTime @default(now())
 
-  payment    Payment   @relation(fields: [paymentId], references: [id])
+  payment    Payment   @relation(fields: [orderId], references: [orderId])
 }

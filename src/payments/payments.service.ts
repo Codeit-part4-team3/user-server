@@ -111,6 +111,7 @@ export class PaymentsService {
 
       // 결제 데이터 저장
       const payment = await this.createPayment(
+        orderId,
         userId,
         planId,
         response.data.totalAmount,
@@ -262,15 +263,15 @@ export class PaymentsService {
     }
   }
 
-  // 결제내역 조회(paymentID) - 특정 결제 내역 조회
-  async getPaymentById(paymentId: number) {
-    if (!paymentId) {
-      throw new HttpException('paymentId는 필수 입니다.', HttpStatus.NOT_FOUND);
+  // 결제내역 조회(orderId) - 주문번호로 특정 결제 내역 조회
+  async getPaymentByOrderId(orderId: string) {
+    if (!orderId) {
+      throw new HttpException('주문번호는 필수 입니다.', HttpStatus.NOT_FOUND);
     }
 
     try {
       const payment = await this.prismaService.payment.findUnique({
-        where: { id: paymentId },
+        where: { orderId: orderId },
         include: {
           plan: true,
         },
@@ -289,6 +290,7 @@ export class PaymentsService {
 
   // 결제내역 생성
   async createPayment(
+    orderId: string,
     userId: number,
     planId: number,
     amount: number,
@@ -299,6 +301,7 @@ export class PaymentsService {
     try {
       const response = await this.prismaService.payment.create({
         data: {
+          orderId,
           userId,
           planId,
           amount,
@@ -320,11 +323,11 @@ export class PaymentsService {
   }
 
   // 환불내역 생성
-  async cancelPayment(paymentId: number, cancelReason: string) {
+  async cancelPayment(orderId: string, cancelReason: string) {
     const idempotency = uuidv4(); // 멱등키
 
     const payment = await this.prismaService.payment.findUnique({
-      where: { id: paymentId },
+      where: { orderId: orderId },
     });
 
     if (!payment) {
@@ -370,7 +373,7 @@ export class PaymentsService {
 
       // 결제 상태 업데이트
       await this.prismaService.payment.update({
-        where: { id: paymentId },
+        where: { orderId: orderId },
         data: { status: 'REFUNDED' },
       });
       this.logger.info('결제 상태 업데이트 완료');
@@ -389,7 +392,7 @@ export class PaymentsService {
       // 환불 기록 생성
       const refund = await this.prismaService.refund.create({
         data: {
-          paymentId: paymentId,
+          orderId,
           amount: payment.amount,
           status: 'REFUNDED',
           createdAt: new Date(),

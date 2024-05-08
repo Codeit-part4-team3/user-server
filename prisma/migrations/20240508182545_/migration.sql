@@ -20,7 +20,7 @@ CREATE TABLE `Plan` (
 
 -- CreateTable
 CREATE TABLE `Payment` (
-    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `orderId` VARCHAR(25) NOT NULL,
     `userId` INTEGER NOT NULL,
     `planId` INTEGER NOT NULL,
     `amount` INTEGER NOT NULL,
@@ -28,7 +28,7 @@ CREATE TABLE `Payment` (
     `paymentKey` VARCHAR(191) NOT NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 
-    PRIMARY KEY (`id`)
+    PRIMARY KEY (`orderId`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
@@ -46,7 +46,7 @@ CREATE TABLE `Subscription` (
 -- CreateTable
 CREATE TABLE `Refund` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
-    `paymentId` INTEGER NOT NULL,
+    `orderId` VARCHAR(191) NOT NULL,
     `amount` INTEGER NOT NULL,
     `status` VARCHAR(191) NOT NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
@@ -67,4 +67,4 @@ ALTER TABLE `Subscription` ADD CONSTRAINT `Subscription_userId_fkey` FOREIGN KEY
 ALTER TABLE `Subscription` ADD CONSTRAINT `Subscription_planId_fkey` FOREIGN KEY (`planId`) REFERENCES `Plan`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `Refund` ADD CONSTRAINT `Refund_paymentId_fkey` FOREIGN KEY (`paymentId`) REFERENCES `Payment`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `Refund` ADD CONSTRAINT `Refund_orderId_fkey` FOREIGN KEY (`orderId`) REFERENCES `Payment`(`orderId`) ON DELETE RESTRICT ON UPDATE CASCADE;

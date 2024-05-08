@@ -7,7 +7,6 @@ import {
   Request,
   Patch,
   Param,
-  ParseIntPipe,
 } from '@nestjs/common';
 import { PaymentsService } from './payments.service';
 import { ConfirmPaymentDto } from 'src/dto/confirmPayment.dto';
@@ -48,16 +47,16 @@ export class PaymentsController {
     return this.paymentsService.getAllPaymentsByUserId(req.userId);
   }
 
-  @Get(':paymentId')
-  getPaymentById(@Param('paymentId', ParseIntPipe) paymentId: number) {
-    return this.paymentsService.getPaymentById(paymentId);
+  @Get(':orderId')
+  getPaymentByOrderId(@Param('orderId') orderId: string) {
+    return this.paymentsService.getPaymentByOrderId(orderId);
   }
 
   @Post('cancel')
   @ApiBody({ type: CancelPaymentDto })
   cancelPayment(@Body() cancelPaymentDto: CancelPaymentDto) {
     return this.paymentsService.cancelPayment(
-      cancelPaymentDto.paymentId,
+      cancelPaymentDto.orderId,
       cancelPaymentDto.cancelReason,
     );
   }
