@@ -5,10 +5,11 @@ import { v4 as uuidv4 } from 'uuid';
 import { TempOrdersService } from './tempOrders.service';
 import { CardIssuerCode, CardIssuerName } from './config/payment.config';
 import { PrismaService } from 'src/prisma.service';
+import { Cron, CronExpression } from '@nestjs/schedule';
 
 @Injectable()
 export class PaymentsService {
-  private readonly tossUrl = process.env.TOSS_CONFIRM_URL;
+  private readonly tossUrl = process.env.TOSS_PAYMENTS_URL;
   private readonly secretKey = process.env.TOSS_SECRET_KEY;
 
   constructor(
@@ -16,14 +17,24 @@ export class PaymentsService {
     private readonly prismaService: PrismaService,
   ) {}
 
-  // 결제
+  /**
+   * 결제 승인 후 처리 과정을 수행
+   * 1. toss 서버에 결제 승인 요청을 보냄
+   * 2. toss 서버에서 결제 승인 응답을 받음
+   * 3. 결제 완료 응답 데이터를 가주문(tempOrders) 테이블과 비교
+   * 4. 결제 완료 응답 데이터를 구독(subscriptions) 테이블에 저장
+   * 5. 결제 완료 응답 데이터를 결제내역(payments) 테이블에 저장
+   *
+   * @param {ConfirmPaymentDto} confirmPaymentDto - 결제 승인 요청 데이터
+   * @returns {Promise<PaymentResponseDto>} 결제 처리 결과를 반환
+   */
   async confirmPayment(confirmPaymentDto: ConfirmPaymentDto) {
     const { userId, planId, orderId, amount, paymentKey } = confirmPaymentDto;
     const idempotency = uuidv4(); // 멱등키
 
     try {
       const response = await axios.post(
-        `${this.tossUrl}`,
+        `${this.tossUrl}/confirm`,
         {
           orderId,
           amount,
@@ -38,7 +49,7 @@ export class PaymentsService {
         },
       );
 
-      // 가주문 테이블과 비교
+      // 가주문과 비교
       const tempOrdersData =
         await this.tempOrdersService.getTempOrdersData(orderId);
       const { tempOrderId, totalAmount } = tempOrdersData;
@@ -57,7 +68,7 @@ export class PaymentsService {
       }
 
       // 결제 수단
-      const method = response.data.paymentMethod;
+      const method = response.data.method;
       let paymentMethod: string;
       switch (method) {
         case '카드':
@@ -75,30 +86,35 @@ export class PaymentsService {
           break;
       }
 
-      // 구독 데이터 저장
-      const subscriptionRecord = await this.createSubscription(
-        userId,
-        planId,
-        response.data.approvedAt,
-        response.data.approvedAt,
-        true,
-        'IRREGULAR',
-      );
+      const subscription = await this.getSubscriptionsByUserId(userId);
+
+      if (subscription) {
+        // 기존 구독이 있을 경우 업데이트
+        await this.updateSubscription(userId, planId);
+      } else {
+        // 기존 구독이 없을 경우 생성
+        await this.createSubscription(
+          userId,
+          planId,
+          new Date(response.data.approvedAt),
+          true,
+        );
+      }
 
       // 결제 데이터 저장
-      const paymentRecord = await this.createPaymentDetails(
+      const payment = await this.createPayment(
         userId,
         planId,
-        subscriptionRecord.id,
         response.data.totalAmount,
         response.data.status,
-        response.data.approvedAt,
+        paymentKey,
+        new Date(response.data.approvedAt),
       );
 
       return {
         title: '결제 성공',
         paymentMethod,
-        paymentRecord,
+        payment,
       };
     } catch (err) {
       const customErrorResponse = {
@@ -112,13 +128,25 @@ export class PaymentsService {
     }
   }
 
+  /**
+   * 서비스에서 사용할 결제 관련 기능 구현
+   * 1. 구독 조회
+   * 2. 구독 생성
+   * 3. 구독 업데이트
+   * 4. 결제내역 조회
+   * 5. 결제내역 생성
+   * 6. 결제 취소
+   * 7. 매일 자정 만료 구독 비활성화
+   */
+
+  // 구독 조회
   async getSubscriptionsByUserId(userId: number) {
     if (!userId) {
       throw new HttpException('userId는 필수 입니다.', HttpStatus.NOT_FOUND);
     }
 
     try {
-      const subscriptions = await this.prismaService.subscription.findMany({
+      const subscriptions = await this.prismaService.subscription.findFirst({
         where: { userId },
         include: {
           plan: true,
@@ -134,15 +162,17 @@ export class PaymentsService {
     }
   }
 
+  // 구독 생성
   async createSubscription(
     userId: number,
     planId: number,
     startDate: Date,
-    endDate: Date,
     isActive: boolean,
-    paymentCycle: string,
   ) {
     try {
+      const endDate = new Date(startDate); // startDate를 복사하여 새로운 Date 객체 생성
+      endDate.setMonth(startDate.getMonth() + 1); // endDate를 한 달 뒤로 설정
+
       const response = await this.prismaService.subscription.create({
         data: {
           userId,
@@ -150,7 +180,6 @@ export class PaymentsService {
           startDate: startDate,
           endDate: endDate,
           isActive: isActive,
-          paymentCycle: paymentCycle,
         },
       });
       return response;
@@ -163,7 +192,35 @@ export class PaymentsService {
     }
   }
 
-  async getPaymentsByUserId(userId: number) {
+  // 구독 업데이트
+  async updateSubscription(userId: number, planId: number) {
+    try {
+      const startDate = new Date();
+      const subscription = await this.prismaService.subscription.findFirst({
+        where: { userId },
+      });
+
+      if (!subscription) {
+        throw new HttpException('Subscription not found', HttpStatus.NOT_FOUND);
+      }
+
+      const response = await this.prismaService.subscription.update({
+        where: { id: subscription.id },
+        data: { planId, startDate },
+      });
+
+      return response;
+    } catch (error) {
+      console.error('Failed to update subscription:', error);
+      throw new HttpException(
+        'Failed to update subscription',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  // 결제내역 조회(userID) - 나의 모든 결제 내역 조회
+  async getAllPaymentsByUserId(userId: number) {
     if (!userId) {
       throw new HttpException('userId는 필수 입니다.', HttpStatus.NOT_FOUND);
     }
@@ -172,9 +229,7 @@ export class PaymentsService {
       const payments = await this.prismaService.payment.findMany({
         where: { userId },
         include: {
-          user: true, // 사용자 정보도 함께 가져오고 싶다면 이렇게 설정
-          plan: true, // 결제한 플랜 정보도 가져올 수 있음
-          subscription: true, // 연관된 구독 정보도 함께 가져올 수 있음
+          plan: true,
         },
       });
       return payments;
@@ -187,12 +242,36 @@ export class PaymentsService {
     }
   }
 
-  async createPaymentDetails(
+  // 결제내역 조회(paymentID) - 특정 결제 내역 조회
+  async getPaymentById(paymentId: number) {
+    if (!paymentId) {
+      throw new HttpException('paymentId는 필수 입니다.', HttpStatus.NOT_FOUND);
+    }
+
+    try {
+      const payment = await this.prismaService.payment.findUnique({
+        where: { id: paymentId },
+        include: {
+          plan: true,
+        },
+      });
+      return payment;
+    } catch (error) {
+      console.error('Error retrieving payment:', error);
+      throw new HttpException(
+        'Failed to retrieve payment',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  // 결제내역 생성
+  async createPayment(
     userId: number,
     planId: number,
-    subscriptionId: number,
     amount: number,
     status: string,
+    paymentKey: string,
     createdAt: Date,
   ) {
     try {
@@ -200,9 +279,9 @@ export class PaymentsService {
         data: {
           userId,
           planId,
-          subscriptionId,
-          amount: amount,
-          status: status,
+          amount,
+          status,
+          paymentKey,
           createdAt: new Date(createdAt),
         },
       });
@@ -211,6 +290,106 @@ export class PaymentsService {
       console.error('Payment creation failed:', error);
       throw new HttpException(
         'Payment creation failed',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  // 결제 취소
+  async cancelPayment(paymentId: number, cancelReason: string) {
+    const payment = await this.prismaService.payment.findUnique({
+      where: { id: paymentId },
+    });
+
+    if (!payment) {
+      throw new HttpException(
+        '결제 내역을 찾을 수 없습니다.',
+        HttpStatus.NOT_FOUND,
+      );
+    }
+
+    if (payment.createdAt.getTime() + 3 * 24 * 60 * 60 * 1000 < Date.now()) {
+      throw new HttpException(
+        '결제 후 3일 이내에만 취소할 수 있습니다.',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+    console.log(payment);
+
+    try {
+      const cancelResponse = await axios.post(
+        `${this.tossUrl}/${payment.paymentKey}/cancel`,
+        { cancelReason },
+        {
+          headers: {
+            Authorization: `Basic ${btoa(`${this.secretKey}:`)}`,
+            'Content-Type': 'application/json',
+          },
+        },
+      );
+
+      if (cancelResponse.data.status !== 'CANCELLED') {
+        throw new HttpException(
+          '결제 취소 실패',
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+      }
+
+      // 결제 상태 업데이트
+      await this.prismaService.payment.update({
+        where: { id: paymentId },
+        data: { status: 'CANCELLED' },
+      });
+
+      // 환불 기록 생성
+      const refund = await this.prismaService.refund.create({
+        data: {
+          paymentId: paymentId,
+          amount: Number(payment.amount),
+          status: 'REFUNDED',
+          createdAt: new Date(),
+        },
+      });
+
+      return {
+        message: '결제 취소 완료',
+        refund,
+      };
+    } catch (error) {
+      console.error('결제 취소 요청 실패:', error);
+      throw new HttpException(
+        '결제 취소 처리 중 오류가 발생했습니다.',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  // 매일 자정 만료 구독 비활성화
+  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
+  async deactivateExpiredSubscriptions() {
+    try {
+      const currentDate = new Date();
+      const subscriptions = await this.prismaService.subscription.findMany({
+        where: {
+          endDate: {
+            lt: currentDate, // endDate가 현재 날짜보다 이전인 경우
+          },
+          isActive: true, // 현재 활성 상태인 구독만 대상으로 함
+        },
+      });
+
+      subscriptions.forEach(async (subscription) => {
+        await this.prismaService.subscription.update({
+          where: { id: subscription.id },
+          data: { isActive: false },
+        });
+      });
+
+      console.log(`Deactivated ${subscriptions.length} expired subscriptions.`);
+    } catch (error) {
+      console.error('Failed to deactivate subscriptions:', error);
+      throw new HttpException(
+        'Failed to deactivate subscriptions',
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }

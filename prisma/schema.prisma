@@ -48,13 +48,8 @@ model SendFriend {
 // 결제
 
 enum PlanType {
-  MONTHLY
-  YEARLY
-}
-
-enum PaymentCycle {
-  REGULAR
-  IRREGULAR
+  BASIC
+  PREMIUM
 }
 
 model TempOrder {
@@ -67,7 +62,6 @@ model Plan {
   id          Int      @id @default(autoincrement())
   type        PlanType
   price       Int
-  duration    Int      @default(12)
 
   subscriptions Subscription[]
   payments Payment[]
@@ -77,14 +71,13 @@ model Payment {
   id              Int          @id @default(autoincrement())
   userId          Int
   planId          Int
-  subscriptionId  Int
   amount          Int
   status          String
+  paymentKey      String
   createdAt       DateTime     @default(now())
 
   user            User         @relation(fields: [userId], references: [id])
   plan            Plan         @relation(fields: [planId], references: [id])
-  subscription    Subscription         @relation(fields: [subscriptionId], references: [id])
   refunds         Refund[]
 }
 
@@ -95,13 +88,10 @@ model Subscription {
   startDate   DateTime @default(now())
   endDate     DateTime
   isActive    Boolean  @default(false)
-  paymentCycle PaymentCycle
 
   user    User    @relation(fields: [userId], references: [id])
   plan    Plan    @relation(fields: [planId], references: [id])
-  payments Payment[]
 }
-
 
 model Refund {
   id          Int      @id @default(autoincrement())

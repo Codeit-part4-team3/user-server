@@ -6,7 +6,7 @@ import { PrismaService } from '../prisma.service';
 export class TempOrdersService {
   constructor(private prismaService: PrismaService) {}
 
-  // 랜덤 주문 ID 생성
+  // 주문 ID 생성
   generateRandomOrderId(length: number): string {
     const charset =
       'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_=';
@@ -20,7 +20,7 @@ export class TempOrdersService {
 
   // 가주문 생성
   async createTempOrder(orderData: { orderName: string; totalAmount: number }) {
-    const tempOrderId = this.generateRandomOrderId(25); // 랜덤 주문 ID
+    const tempOrderId = this.generateRandomOrderId(25); // 주문 ID
     try {
       const order = await this.prismaService.tempOrder.create({
         data: {
@@ -37,7 +37,7 @@ export class TempOrdersService {
     }
   }
 
-  // 가주문 조회
+  // 가주문 조회(실주문과 대조용도)
   async getTempOrdersData(orderId: string) {
     try {
       const order = await this.prismaService.tempOrder.findUnique({

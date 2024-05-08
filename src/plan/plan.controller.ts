@@ -9,8 +9,8 @@ import { PlanService } from './plan.service';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/auth/jwt-auth-guard';
 
-// @UseGuards(JwtAuthGuard)
-// @ApiBearerAuth('accessToken')
+@UseGuards(JwtAuthGuard)
+@ApiBearerAuth('accessToken')
 @ApiTags('plans')
 @Controller('/user/v1/plans')
 export class PlanController {

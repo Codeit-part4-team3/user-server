@@ -11,8 +11,8 @@ import { CreateTempOrderDto } from '../dto/createTempOrder.dto';
 import { ApiBearerAuth, ApiBody, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/auth/jwt-auth-guard';
 
-// @UseGuards(JwtAuthGuard)
-// @ApiBearerAuth('accessToken')
+@UseGuards(JwtAuthGuard)
+@ApiBearerAuth('accessToken')
 @ApiTags('payments')
 @Controller('/user/v1/payments')
 export class TempOrdersController {
