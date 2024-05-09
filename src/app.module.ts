@@ -11,6 +11,8 @@ import { LoggerModule } from './common/logger/logger.module';
 import { LoggingMiddleware } from './common/logger/logger.middleware';
 import { AuthService } from './auth/auth.service';
 import { InternalModule } from './internal/internal.module';
+import { PaymentsModule } from './payments/payments.module';
+import { PlanModule } from './plan/plan.module';
 
 @Module({
   imports: [
@@ -19,6 +21,8 @@ import { InternalModule } from './internal/internal.module';
     ConfigModule.forRoot({ isGlobal: true }),
     FriendModule,
     InternalModule,
+    PaymentsModule,
+    PlanModule,
   ],
   controllers: [UserController, AppController],
   providers: [PrismaService, UserService, AppService, AuthService],
