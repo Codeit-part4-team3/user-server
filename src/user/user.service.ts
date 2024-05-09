@@ -30,6 +30,7 @@ export class UserService {
 
     try {
       const res = await this.s3Client.upload(params).promise();
+
       return res.Location;
     } catch (e) {
       throw new HttpException('서버에러', HttpStatus.INTERNAL_SERVER_ERROR);
@@ -59,7 +60,7 @@ export class UserService {
       id: user.id,
       email: user.email,
       nickname: user.nickname,
-      state: user.state.name || null,
+      state: user.state?.name || null,
     };
 
     return userInfo;
