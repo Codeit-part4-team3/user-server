@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Post,
+  Put,
   Request,
   UploadedFile,
   UseGuards,
@@ -19,8 +20,8 @@ import {
 } from '../decorators/userDecorators';
 import { FileInterceptor } from '@nestjs/platform-express';
 
-// @UseGuards(JwtAuthGuard)
-// @ApiBearerAuth('accessToken')
+@UseGuards(JwtAuthGuard)
+@ApiBearerAuth('accessToken')
 @unauthorized
 @failToken
 @ApiTags('user')
