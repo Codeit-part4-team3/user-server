@@ -195,6 +195,8 @@ export class AuthService {
     try {
       const res = await this.cognitoClient.changePassword(params).promise();
       this.logger.info('Password changed successfully.');
+      const user = await this.tokenGetUser(accessToken);
+      await this.userService.changePassword(user.email, newPassword);
       return res;
     } catch (e) {
       this.logger.error(`Password change failed: ${e.message}`);
@@ -261,6 +263,8 @@ export class AuthService {
         .promise();
 
       this.logger.info('Password reset confirmed successfully.');
+
+      await this.userService.changePassword(email, newPassword);
 
       return res;
     } catch (e) {

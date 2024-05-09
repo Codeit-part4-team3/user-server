@@ -92,6 +92,15 @@ export class UserService {
     return userInfo;
   }
 
+  async changePassword(email: string, password: string) {
+    await this.getUserByEmail(email);
+
+    return this.prismaService.user.update({
+      where: { email },
+      data: { password },
+    });
+  }
+
   async updateUserNickname({
     id,
     nickname,

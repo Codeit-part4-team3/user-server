@@ -19,6 +19,9 @@ model User {
   nickname  String
   password  String
   state    State?
+  
+  payment        Payment[]
+  subscriptions  Subscription[]
 }
 
 model FriendList {
@@ -40,4 +43,62 @@ model SendFriend {
   receiveUserId Int
   @@unique([sendUserId, receiveUserId]) 
   @@id([sendUserId, receiveUserId])
+}
+
+// 결제
+
+enum PlanType {
+  BASIC
+  PREMIUM
+}
+
+model TempOrder {
+  tempOrderId  String   @id @default(uuid()) @db.VarChar(25)
+  orderName    String   @db.VarChar(50)
+  totalAmount  Int
+}
+
+model Plan {
+  id          Int      @id @default(autoincrement())
+  type        PlanType
+  price       Int
+
+  subscriptions Subscription[]
+  payments Payment[]
+}
+
+model Payment {
+  orderId         String      @id @db.VarChar(25)
+  userId          Int
+  planId          Int
+  amount          Int
+  status          String
+  paymentKey      String
+  createdAt       DateTime     @default(now())
+
+  user            User         @relation(fields: [userId], references: [id])
+  plan            Plan         @relation(fields: [planId], references: [id])
+  refunds         Refund[]
+}
+
+model Subscription {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  planId      Int
+  startDate   DateTime @default(now())
+  endDate     DateTime
+  isActive    Boolean  @default(false)
+
+  user    User    @relation(fields: [userId], references: [id])
+  plan    Plan    @relation(fields: [planId], references: [id])
+}
+
+model Refund {
+  id          Int      @id @default(autoincrement())
+  orderId     String
+  amount      Int
+  status      String
+  createdAt   DateTime @default(now())
+
+  payment    Payment   @relation(fields: [orderId], references: [orderId])
 }

@@ -3,10 +3,12 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
+import cookieParser from 'cookie-parser';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { bufferLogs: true });
   const logger = app.get(WINSTON_MODULE_NEST_PROVIDER);
+  app.use(cookieParser());
   app.useLogger(logger);
 
   app.useGlobalPipes(
@@ -39,7 +41,7 @@ async function bootstrap() {
     origin: ['https://pqsoft.net', 'http://localhost:5173'],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     optionsSuccessStatus: 204,
-    allowedHeaders: ['authorization', 'Content-Type'],
+    allowedHeaders: ['authorization', 'Content-Type', '*'],
     credentials: true,
   });
 

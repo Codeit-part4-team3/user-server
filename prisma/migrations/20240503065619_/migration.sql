@@ -37,5 +37,16 @@ CREATE TABLE `SendFriend` (
     PRIMARY KEY (`sendUserId`, `receiveUserId`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
+-- CreateTable
+CREATE TABLE `TempOrder` (
+    `tempOrderId` VARCHAR(25) NOT NULL,
+    `orderName` VARCHAR(50) NOT NULL,
+    `pointAmount` INTEGER NOT NULL,
+    `couponAmount` MEDIUMINT NOT NULL,
+    `totalAmount` INTEGER NOT NULL,
+
+    PRIMARY KEY (`tempOrderId`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
 -- AddForeignKey
 ALTER TABLE `State` ADD CONSTRAINT `State_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
