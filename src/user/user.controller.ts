@@ -1,7 +1,10 @@
 import {
   Body,
   Controller,
+  FileTypeValidator,
+  ParseFilePipe,
   Post,
+  Put,
   Request,
   UploadedFile,
   UseGuards,
@@ -18,6 +21,7 @@ import {
   MyStatePut,
 } from '../decorators/userDecorators';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { UserInfoDto } from 'src/dto/userInfo.dto';
 
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth('accessToken')
@@ -39,12 +43,33 @@ export class UserController {
     return await this.userService.getUserById(request.userId);
   }
 
+  @Put('me/update')
+  @UseInterceptors(FileInterceptor('imageFile'))
+  async updateUser(
+    @Request() request,
+    @Body()
+    userInfoDto: UserInfoDto,
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [new FileTypeValidator({ fileType: 'image/*' })],
+        fileIsRequired: false,
+      }),
+    )
+    imageFile: Express.Multer.File, // Add @Optional() decorator to allow null
+  ) {
+    return await this.userService.updateUserInfo(
+      request.userId,
+      userInfoDto,
+      imageFile,
+    );
+  }
+
   @MyStateGet('me/state')
   async getState(@Request() request) {
     return await this.userService.getState(request.userId);
   }
 
-  @MyStatePut('me/state')
+  @MyStatePut('me/state/update')
   async changeState(@Request() request, @Body() stateDto: StateDto) {
     return await this.userService.changeState(request.userId, stateDto);
   }
