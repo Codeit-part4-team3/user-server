@@ -21,7 +21,7 @@ import {
   MyStatePut,
 } from '../decorators/userDecorators';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { UserInfoDto } from 'src/dto/userInfo.dto';
+import { UserInfoDto } from '../dto/userInfo.dto';
 
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth('accessToken')
