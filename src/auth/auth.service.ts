@@ -73,6 +73,28 @@ export class AuthService {
     }
   }
 
+  // 토큰으로 유저 권한 불러오기
+  async tokenGetRole(token: string) {
+    try {
+      const roleAttribute = (await this.tokenLogin(token)).UserAttributes.find(
+        (attr) => attr.Name === 'custom:role',
+      );
+
+      if (!roleAttribute) {
+        console.error('사용자에게 권한 속성이 없습니다.');
+        throw new HttpException(
+          '사용자에게 권한 속성이 없습니다.',
+          HttpStatus.FORBIDDEN,
+        );
+      }
+
+      return roleAttribute.Value;
+    } catch (error) {
+      console.error('권한 불러오기 실패:', error);
+      throw new HttpException('권한 불러오기 실패', HttpStatus.NOT_FOUND);
+    }
+  }
+
   // 회원가입
   async signUp(signupDto: SignupDto) {
     const { email, password } = signupDto;

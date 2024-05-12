@@ -1,9 +1,14 @@
-import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
+import { Injectable, HttpException, HttpStatus, Inject } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
+import { Logger } from 'winston';
+import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 
 @Injectable()
 export class PlanService {
-  constructor(private prismaService: PrismaService) {}
+  constructor(
+    @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
+    private prismaService: PrismaService,
+  ) {}
 
   // 모든 플랜 조회
   async getAllPlans() {

@@ -1,4 +1,11 @@
-import { Body, Controller, Request, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Request,
+  UseGuards,
+} from '@nestjs/common';
 import { UserService } from './user.service';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { StateDto } from './../dto/state.dto';
@@ -9,6 +16,7 @@ import {
   MyStateGet,
   MyStatePut,
 } from '../decorators/userDecorators';
+import { AdminGuard } from 'src/auth/admin-guard';
 
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth('accessToken')
@@ -32,5 +40,11 @@ export class UserController {
   @MyStatePut('me/state')
   async changeState(@Request() request, @Body() stateDto: StateDto) {
     return await this.userService.changeState(request.userId, stateDto);
+  }
+
+  @Get(':id')
+  @UseGuards(AdminGuard)
+  async getUserById(@Param('id') id: number) {
+    return await this.userService.getUserById(id);
   }
 }
