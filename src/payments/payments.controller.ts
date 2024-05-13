@@ -14,7 +14,7 @@ import { ApiBearerAuth, ApiBody, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from './../auth/jwt-auth-guard';
 import { UpdateSubscriptionDto } from '../dto/updateSubscription.dto';
 import { CancelPaymentDto } from '../dto/cancelPayment.dto';
-import { AdminGuard } from 'src/auth/admin-guard';
+import { AdminGuard } from '../auth/admin-guard';
 
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth('accessToken')

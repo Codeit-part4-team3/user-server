@@ -24,7 +24,7 @@ import {
 } from '../decorators/userDecorators';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { UserInfoDto } from '../dto/userInfo.dto';
-import { AdminGuard } from 'src/auth/admin-guard';
+import { AdminGuard } from '../auth/admin-guard';
 
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth('accessToken')
