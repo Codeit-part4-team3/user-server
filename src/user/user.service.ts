@@ -3,10 +3,40 @@ import { PrismaService } from '../prisma.service';
 import { User } from '@prisma/client';
 import { SignupDto } from 'src/dto/signup.dto';
 import { StateDto } from './../dto/state.dto';
+import S3Client from 'aws-sdk/clients/s3';
+import { UserInfoDto } from 'src/dto/userInfo.dto';
 
 @Injectable()
 export class UserService {
-  constructor(private readonly prismaService: PrismaService) {}
+  private readonly s3Client: S3Client;
+  constructor(private readonly prismaService: PrismaService) {
+    this.s3Client = new S3Client({
+      region: 'ap-northeast-2',
+      accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+    });
+  }
+
+  async upload(file: Express.Multer.File) {
+    if (!file) {
+      throw new HttpException('파일이 필요합니다.', HttpStatus.NOT_FOUND);
+    }
+
+    const { originalname, buffer } = file;
+    const params = {
+      Bucket: process.env.AWS_S3_BUCKET_NAME,
+      Key: `${Date.now()}-${originalname}`,
+      Body: buffer,
+    };
+
+    try {
+      const res = await this.s3Client.upload(params).promise();
+
+      return res.Location;
+    } catch (e) {
+      throw new HttpException('서버에러', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
 
   async getUserById(id: number) {
     if (!id) {
@@ -31,7 +61,8 @@ export class UserService {
       id: user.id,
       email: user.email,
       nickname: user.nickname,
-      state: user.state.name || null,
+      state: user.state?.name || null,
+      imageUrl: user.imageUrl || '',
     };
 
     return userInfo;
@@ -142,5 +173,33 @@ export class UserService {
       where: { userId: id },
       data: { name: state },
     });
+  }
+
+  async updateUserInfo(
+    id: number,
+    userInfoDto: UserInfoDto,
+    imageFile?: Express.Multer.File,
+  ) {
+    const { nickname } = userInfoDto;
+
+    if (imageFile) {
+      const imageUrl: string = await this.upload(imageFile);
+
+      await this.prismaService.user.update({
+        where: { id },
+        data: { imageUrl },
+      });
+    }
+
+    if (nickname) {
+      await this.prismaService.user.update({
+        where: { id },
+        data: { nickname },
+      });
+    }
+
+    const res = await this.getUserById(id);
+
+    return res;
   }
 }

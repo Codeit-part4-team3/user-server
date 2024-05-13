@@ -19,6 +19,7 @@ model User {
   nickname  String
   password  String
   state    State?
+  imageUrl     String?
   
   payment        Payment[]
   subscriptions  Subscription[]

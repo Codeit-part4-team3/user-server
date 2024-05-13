@@ -19,7 +19,7 @@ export class JwtAuthGuard implements CanActivate {
     }
 
     const user = await this.authService.tokenGetUser(accessToken);
-    if (!user || !user.email) {
+    if (!user || !user?.email) {
       throw new UnauthorizedException('Unauthorized');
     }
 

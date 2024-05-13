@@ -170,7 +170,7 @@ export class AuthService {
         id: user.id,
         email: user.email,
         nickname: user.nickname,
-        state: user['state'].name || null,
+        state: user['state']?.name || null,
       };
       const AuthenticationResult = res.AuthenticationResult;
       this.logger.info(`Login successful for ${loginDto.email}`);
