@@ -51,6 +51,7 @@ model SendFriend {
 enum PlanType {
   BASIC
   PREMIUM
+  EVENT
 }
 
 model TempOrder {
@@ -102,4 +103,10 @@ model Refund {
   createdAt   DateTime @default(now())
 
   payment    Payment   @relation(fields: [orderId], references: [orderId])
+}
+
+model EventAmount {
+  id          Int      @id @default(autoincrement())
+  amount      Int
+  createdAt   DateTime @default(now())
 }

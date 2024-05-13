@@ -73,6 +73,28 @@ export class AuthService {
     }
   }
 
+  // 토큰으로 유저 권한 불러오기
+  async tokenGetRole(token: string) {
+    try {
+      const roleAttribute = (await this.tokenLogin(token)).UserAttributes.find(
+        (it) => it.Name === 'custom:role',
+      );
+
+      return roleAttribute.Value;
+    } catch (err) {
+      if (err.code === 'NotAuthorizedException') {
+        throw new HttpException(
+          TOKEN_EXPIRED_OR_INVALID,
+          HttpStatus.UNAUTHORIZED,
+        );
+      }
+      throw new HttpException(
+        '사용자에게 권한이 없습니다.',
+        HttpStatus.FORBIDDEN,
+      );
+    }
+  }
+
   // 회원가입
   async signUp(signupDto: SignupDto) {
     const { email, password } = signupDto;

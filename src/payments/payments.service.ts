@@ -9,6 +9,7 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { Logger } from 'winston';
 import { ConfigService } from '@nestjs/config';
+import { EventService } from './event.service';
 
 @Injectable()
 export class PaymentsService {
@@ -19,6 +20,7 @@ export class PaymentsService {
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
     private readonly configService: ConfigService,
     private readonly tempOrdersService: TempOrdersService,
+    private readonly eventService: EventService,
     private readonly prismaService: PrismaService,
   ) {}
 
@@ -94,20 +96,25 @@ export class PaymentsService {
       }
 
       // 구독 생성 또는 업데이트
-      const subscription = await this.getSubscriptionsByUserId(userId);
-      if (subscription) {
-        // 기존 구독이 있을 경우 업데이트
-        await this.updateSubscription(userId, planId);
+      if (planId === 3) {
+        // 이벤트 결제라면 누적 금액 업데이트
+        await this.eventService.updateEventAmount(amount);
       } else {
-        // 기존 구독이 없을 경우 생성
-        await this.createSubscription(
-          userId,
-          planId,
-          new Date(response.data.approvedAt),
-          true,
-        );
+        const subscription = await this.getSubscriptionsByUserId(userId);
+        if (subscription) {
+          // 기존 구독이 있을 경우 업데이트
+          await this.updateSubscription(userId, planId);
+        } else {
+          // 기존 구독이 없을 경우 생성
+          await this.createSubscription(
+            userId,
+            planId,
+            new Date(response.data.approvedAt),
+            true,
+          );
+        }
+        this.logger.info('구독 생성 또는 업데이트 완료');
       }
-      this.logger.info('구독 생성 또는 업데이트 완료');
 
       // 결제 데이터 저장
       const payment = await this.createPayment(
@@ -186,6 +193,8 @@ export class PaymentsService {
     startDate: Date,
     isActive: boolean,
   ) {
+    if (planId === 3) return;
+
     try {
       const endDate = new Date(startDate); // startDate를 복사하여 새로운 Date 객체 생성
       endDate.setMonth(startDate.getMonth() + 1); // endDate를 한 달 뒤로 설정
@@ -212,6 +221,8 @@ export class PaymentsService {
 
   // 구독 업데이트
   async updateSubscription(userId: number, planId: number) {
+    if (planId === 3) return;
+
     try {
       const startDate = new Date();
       const subscription = await this.prismaService.subscription.findFirst({
@@ -275,6 +286,30 @@ export class PaymentsService {
         include: {
           plan: true,
         },
+      });
+
+      this.logger.info('결제내역 조회 완료');
+      return payment;
+    } catch (error) {
+      this.logger.error('결제내역 조회 실패:', error);
+      throw new HttpException(
+        'Failed to retrieve payment',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  // planId로 결제내역 조회
+  async getPaymentsByPlanId(planId: string) {
+    if (!planId) {
+      throw new HttpException('플랜 ID는 필수 입니다.', HttpStatus.NOT_FOUND);
+    }
+
+    const planIdNumber = parseInt(planId);
+
+    try {
+      const payment = await this.prismaService.payment.findMany({
+        where: { planId: planIdNumber },
       });
 
       this.logger.info('결제내역 조회 완료');

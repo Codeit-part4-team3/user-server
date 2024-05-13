@@ -4,6 +4,7 @@ import { TempOrdersService } from './tempOrders.service';
 import { PrismaService } from '../prisma.service';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { ConfigService } from '@nestjs/config';
+import { EventService } from './event.service';
 
 describe('PaymentsService', () => {
   let service: PaymentsService;
@@ -12,6 +13,7 @@ describe('PaymentsService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         PaymentsService,
+        EventService,
         {
           provide: TempOrdersService,
           useValue: {
