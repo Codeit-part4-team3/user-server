@@ -4,6 +4,7 @@ import { User } from '@prisma/client';
 import { SignupDto } from 'src/dto/signup.dto';
 import { StateDto } from './../dto/state.dto';
 import S3Client from 'aws-sdk/clients/s3';
+import { UserInfoDto } from 'src/dto/userInfo.dto';
 
 @Injectable()
 export class UserService {
@@ -61,6 +62,7 @@ export class UserService {
       email: user.email,
       nickname: user.nickname,
       state: user.state?.name || null,
+      imageUrl: user.imageUrl || '',
     };
 
     return userInfo;
@@ -171,5 +173,33 @@ export class UserService {
       where: { userId: id },
       data: { name: state },
     });
+  }
+
+  async updateUserInfo(
+    id: number,
+    userInfoDto: UserInfoDto,
+    imageFile?: Express.Multer.File,
+  ) {
+    const { nickname } = userInfoDto;
+
+    if (imageFile) {
+      const imageUrl: string = await this.upload(imageFile);
+
+      await this.prismaService.user.update({
+        where: { id },
+        data: { imageUrl },
+      });
+    }
+
+    if (nickname) {
+      await this.prismaService.user.update({
+        where: { id },
+        data: { nickname },
+      });
+    }
+
+    const res = await this.getUserById(id);
+
+    return res;
   }
 }

@@ -7,8 +7,8 @@ import { User } from '@prisma/client';
 export class InternalController {
   constructor(private readonly internalService: InternalService) {}
 
-  @Post('userNames')
-  async getUserNames(@Body() userDto: UserByIdsDto): Promise<User[]> {
+  @Post('users')
+  async getUserNames(@Body() userDto: UserByIdsDto) {
     return this.internalService.getUserByIds(userDto.ids);
   }
 
