@@ -8,7 +8,7 @@ export class InternalController {
   constructor(private readonly internalService: InternalService) {}
 
   @Post('users')
-  async getUserNames(@Body() userDto: UserByIdsDto): Promise<User[]> {
+  async getUserNames(@Body() userDto: UserByIdsDto) {
     return this.internalService.getUserByIds(userDto.ids);
   }
 
