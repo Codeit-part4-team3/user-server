@@ -107,4 +107,5 @@ model Refund {
 model EventAmount {
   id          Int      @id @default(autoincrement())
   amount      Int
+  createdAt   DateTime @default(now())
 }

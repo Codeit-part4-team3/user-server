@@ -5,7 +5,7 @@ import { EventService } from './event.service';
 import { AdminGuard } from 'src/auth/admin-guard';
 import { AmountDto } from 'src/dto/amount.dto';
 
-@UseGuards(JwtAuthGuard, AdminGuard)
+@UseGuards(JwtAuthGuard)
 @ApiBearerAuth('accessToken')
 @ApiTags('payments')
 @Controller('/user/v1/payments')
@@ -14,6 +14,7 @@ export class EventController {
 
   //누적 금액 생성
   @Post('event')
+  @UseGuards(AdminGuard)
   createEventAmount(@Body() amountDto: AmountDto) {
     return this.eventService.createEventAmount(amountDto);
   }
@@ -26,6 +27,7 @@ export class EventController {
 
   //누적 금액 삭제
   @Delete('event')
+  @UseGuards(AdminGuard)
   deleteEventAmount() {
     return this.eventService.deleteEventAmount();
   }

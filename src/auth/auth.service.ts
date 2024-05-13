@@ -77,21 +77,21 @@ export class AuthService {
   async tokenGetRole(token: string) {
     try {
       const roleAttribute = (await this.tokenLogin(token)).UserAttributes.find(
-        (attr) => attr.Name === 'custom:role',
+        (it) => it.Name === 'custom:role',
       );
 
-      if (!roleAttribute) {
-        console.error('사용자에게 권한 속성이 없습니다.');
+      return roleAttribute.Value;
+    } catch (err) {
+      if (err.code === 'NotAuthorizedException') {
         throw new HttpException(
-          '사용자에게 권한 속성이 없습니다.',
-          HttpStatus.FORBIDDEN,
+          TOKEN_EXPIRED_OR_INVALID,
+          HttpStatus.UNAUTHORIZED,
         );
       }
-
-      return roleAttribute.Value;
-    } catch (error) {
-      console.error('권한 불러오기 실패:', error);
-      throw new HttpException('권한 불러오기 실패', HttpStatus.NOT_FOUND);
+      throw new HttpException(
+        '사용자에게 권한이 없습니다.',
+        HttpStatus.FORBIDDEN,
+      );
     }
   }
 
