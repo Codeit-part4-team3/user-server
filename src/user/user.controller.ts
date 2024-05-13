@@ -9,6 +9,8 @@ import {
   UploadedFile,
   UseGuards,
   UseInterceptors,
+  Get,
+  Param,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
@@ -22,6 +24,7 @@ import {
 } from '../decorators/userDecorators';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { UserInfoDto } from '../dto/userInfo.dto';
+import { AdminGuard } from '../auth/admin-guard';
 
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth('accessToken')
@@ -72,5 +75,11 @@ export class UserController {
   @MyStatePut('me/state/update')
   async changeState(@Request() request, @Body() stateDto: StateDto) {
     return await this.userService.changeState(request.userId, stateDto);
+  }
+
+  @Get(':id')
+  @UseGuards(AdminGuard)
+  async getUserById(@Param('id') id: number) {
+    return await this.userService.getUserById(id);
   }
 }

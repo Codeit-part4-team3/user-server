@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE `Plan` MODIFY `type` ENUM('BASIC', 'PREMIUM', 'EVENT') NOT NULL;
