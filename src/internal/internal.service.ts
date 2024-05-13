@@ -11,13 +11,26 @@ export class InternalService {
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
   ) {}
 
-  async getUserByIds(userIds: number[]): Promise<User[]> {
+  async getUserByIds(userIds: number[]) {
     const users = await Promise.all(
-      userIds.map((userId) =>
-        this.prismaService.user.findUnique({
-          where: { id: userId },
-        }),
-      ),
+      userIds.map(async (userId) => {
+        const user = await this.prismaService.user.findUnique({
+          where: {
+            id: userId,
+          },
+          include: {
+            state: true,
+          },
+        });
+
+        return {
+          id: user.id,
+          email: user.email,
+          nickname: user.nickname,
+          state: user.state?.name || null,
+          imageUrl: user.imageUrl || '',
+        };
+      }),
     );
     return users;
   }
