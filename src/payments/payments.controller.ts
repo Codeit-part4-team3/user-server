@@ -14,7 +14,6 @@ import { ApiBearerAuth, ApiBody, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from './../auth/jwt-auth-guard';
 import { UpdateSubscriptionDto } from '../dto/updateSubscription.dto';
 import { CancelPaymentDto } from '../dto/cancelPayment.dto';
-import { AdminGuard } from '../auth/admin-guard';
 
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth('accessToken')
@@ -54,7 +53,6 @@ export class PaymentsController {
   }
 
   @Get('plan/:planId')
-  @UseGuards(AdminGuard)
   getPaymentsByPlanId(@Param('planId') planId: string) {
     return this.paymentsService.getPaymentsByPlanId(planId);
   }

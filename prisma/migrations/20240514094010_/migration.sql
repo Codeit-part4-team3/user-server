@@ -1,0 +1,14 @@
+-- AlterTable
+ALTER TABLE `Plan` MODIFY `type` ENUM('BASIC', 'PREMIUM', 'EVENT') NOT NULL;
+
+-- AlterTable
+ALTER TABLE `User` ADD COLUMN `imageUrl` VARCHAR(191) NULL;
+
+-- CreateTable
+CREATE TABLE `EventAmount` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `amount` INTEGER NOT NULL,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
