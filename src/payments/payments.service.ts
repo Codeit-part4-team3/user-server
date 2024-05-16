@@ -413,16 +413,21 @@ export class PaymentsService {
       });
       this.logger.info('결제 상태 업데이트 완료');
 
-      // 구독 비활성화
-      const subscription = await this.updateSubscription(
-        payment.userId,
-        payment.planId,
-      );
-      await this.prismaService.subscription.update({
-        where: { id: subscription.id },
-        data: { isActive: false },
-      });
-      this.logger.info('구독 비활성화 완료');
+      // 구독 비활성화 또는 이벤트 누적 금액 업데이트
+      if (payment.planId === 3) {
+        await this.eventService.updateEventAmount(-payment.amount);
+        this.logger.info('이벤트 누적 금액 업데이트 완료');
+      } else {
+        const subscription = await this.updateSubscription(
+          payment.userId,
+          payment.planId,
+        );
+        await this.prismaService.subscription.update({
+          where: { id: subscription.id },
+          data: { isActive: false },
+        });
+        this.logger.info('구독 비활성화 완료');
+      }
 
       // 환불 기록 생성
       const refund = await this.prismaService.refund.create({
